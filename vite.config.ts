@@ -24,9 +24,9 @@ export default defineConfig(({ command }) => ({
       },
     },
   ].filter(Boolean),
-  build: {
-    rollupOptions: {
-      input: resolve(__dirname, "index.vite.html"),
-    },
+ build: {
+  rollupOptions: {
+    input: resolve(__dirname, "index.html"),
   },
+},
 }));
