@@ -935,21 +935,29 @@
 }
 
 .rz-infection__complete-copy {
-  margin: 0 0 1rem;
+  margin: 0 0 1.25rem;
   font-size: 0.72rem;
   letter-spacing: 0.12em;
   color: rgba(190, 180, 172, 0.78);
 }
 
+.rz-infection__complete-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+}
+
 .rz-infection__download-btn {
   display: inline-block;
-  padding: 0.75rem 1.1rem;
+  min-width: min(100%, 280px);
+  padding: 0.95rem 1.45rem;
   border: 1px solid rgba(120, 200, 80, 0.55);
   border-radius: 2px;
   background: rgba(10, 16, 8, 0.88);
   color: rgba(180, 240, 150, 0.95);
   font: inherit;
-  font-size: 0.68rem;
+  font-size: clamp(0.72rem, 2.8vw, 0.82rem);
   letter-spacing: 0.16em;
   cursor: pointer;
   transition:
@@ -1009,7 +1017,7 @@
 }
 
 .rz-infection__reset {
-  margin-top: 1rem;
+  margin-top: 0;
 }
 
 /* ═══ Share confirmation modal ═══ */
@@ -1095,6 +1103,20 @@
 
 .rz-infection-modal__body p:last-child {
   margin-bottom: 0;
+}
+
+.rz-infection-modal__steps {
+  margin: 0 0 1rem;
+  padding-left: 1.15rem;
+  text-align: left;
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  line-height: 1.55;
+  color: rgba(190, 182, 174, 0.88);
+}
+
+.rz-infection-modal__steps li + li {
+  margin-top: 0.35rem;
 }
 
 .rz-infection-modal__preview {

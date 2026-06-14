@@ -106,6 +106,46 @@ export async function copyBlobToClipboard(blob: Blob): Promise<void> {
   ]);
 }
 
+/** iPhone / iPad / Android — native share attaches image directly to X. */
+export function prefersMobileXShare(): boolean {
+  const ua = navigator.userAgent;
+  if (/Android/i.test(ua)) return true;
+  if (/iPhone|iPod|iPad/i.test(ua)) return true;
+  if (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return true;
+  return false;
+}
+
+/** Shrink large infected PNGs so clipboard + X paste work reliably. */
+async function blobForShare(blob: Blob, maxWidth = 1200): Promise<Blob> {
+  if (blob.size <= 1.5 * 1024 * 1024) return blob;
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxWidth / (img.naturalWidth || maxWidth));
+      const width = Math.max(1, Math.round((img.naturalWidth || maxWidth) * scale));
+      const height = Math.max(1, Math.round((img.naturalHeight || maxWidth) * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(blob);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((next) => resolve(next ?? blob), "image/png", 0.92);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(blob);
+    };
+    img.src = url;
+  });
+}
+
 export const X_INFECTION_SHARE_TEXT = `⚠️ INFECTION CONFIRMED ⚠️
 
 I have been registered as a Blackwater Subject.
@@ -116,35 +156,37 @@ How many more have been exposed?
 
 #BLACKWATERINFECTION`;
 
-/** Opens X compose in the app (mobile) or a new tab (desktop). Call synchronously from a click handler. */
-export function openXCompose(text: string): boolean {
-  const url = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
-  const opened = window.open(url, "_blank", "noopener,noreferrer");
-  if (!opened) {
-    window.location.assign(url);
-    return true;
-  }
-  return true;
+function buildXIntentUrl(text: string): string {
+  return `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
 }
 
-export type ShareInfectedResult = "x-compose" | "downloaded";
+/** Opens X compose with pre-filled message. */
+export function openXCompose(text: string): void {
+  const url = buildXIntentUrl(text);
+  const opened = window.open(url, "_blank", "noopener,noreferrer");
+  if (!opened) window.location.assign(url);
+}
 
-/**
- * Opens X compose with pre-filled copy, then puts the infected PFP on the
- * clipboard so the user can paste it into the open post.
- * X must open synchronously from the click handler to avoid popup blockers.
- */
+export type ShareInfectedResult = "native-share" | "x-text";
+
+/** Phone / iPad: share sheet with image + text. Desktop uses openXCompose instead. */
 export async function shareInfectedToX(
   blob: Blob,
   text: string = X_INFECTION_SHARE_TEXT,
 ): Promise<ShareInfectedResult> {
-  openXCompose(text);
+  const shareBlob = await blobForShare(blob);
+  const file = new File([shareBlob], "infected-pfp.png", { type: "image/png" });
 
-  try {
-    await copyBlobToClipboard(blob);
-    return "x-compose";
-  } catch {
-    downloadBlob(blob, "infected-pfp.png");
-    return "downloaded";
+  for (const payload of [{ files: [file], text }, { files: [file] }]) {
+    try {
+      if (navigator.canShare && !navigator.canShare(payload)) continue;
+      await navigator.share(payload);
+      return "native-share";
+    } catch (err) {
+      if ((err as Error).name === "AbortError") throw err;
+    }
   }
+
+  openXCompose(text);
+  return "x-text";
 }

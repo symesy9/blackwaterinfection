@@ -22,7 +22,10 @@ import {
   downloadBlob,
   infectedFilename,
   mergeInfectionImage,
+  openXCompose,
+  prefersMobileXShare,
   shareInfectedToX,
+  X_INFECTION_SHARE_TEXT,
 } from "../lib/mergeInfectionImage";
 import { incrementInfectionCount } from "../lib/infectionStats";
 
@@ -71,6 +74,8 @@ export default function InfectionStation() {
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [sharingToX, setSharingToX] = useState(false);
+  const [pfpDownloaded, setPfpDownloaded] = useState(false);
+  const useMobileShare = prefersMobileXShare();
 
   const controlsLocked =
     phase !== "idle" && phase !== "complete" ? true : phase === "complete";
@@ -137,6 +142,7 @@ export default function InfectionStation() {
     setError(null);
     setShareNotice(null);
     setShareModalOpen(false);
+    setPfpDownloaded(false);
     setPreviewStackWidth(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, [previewUrl, infectedUrl]);
@@ -236,6 +242,10 @@ export default function InfectionStation() {
   const onDownloadPfp = () => {
     if (!infectedBlob || !uploadedFile) return;
     downloadBlob(infectedBlob, infectedFilename(uploadedFile.name));
+    setPfpDownloaded(true);
+    if (!useMobileShare) {
+      setShareNotice("Downloaded — now tap REPORT TO X and attach the image in your post.");
+    }
   };
 
   const onReportToX = async () => {
@@ -243,18 +253,25 @@ export default function InfectionStation() {
     setShareNotice(null);
     setSharingToX(true);
     try {
-      const result = await shareInfectedToX(infectedBlob);
-      if (result === "x-compose") {
-        setShareNotice(
-          "X is open with your message — paste your infected PFP (⌘V / Ctrl+V, or tap and hold → Paste on mobile), then post.",
-        );
+      if (useMobileShare && typeof navigator.share === "function") {
+        const result = await shareInfectedToX(infectedBlob);
+        if (result === "native-share") {
+          setShareNotice(
+            "Choose X on the share menu — your infected image and message are ready to post.",
+          );
+        } else {
+          setShareNotice("X opened with your message — attach your image, then post.");
+        }
       } else {
+        openXCompose(X_INFECTION_SHARE_TEXT);
         setShareNotice(
-          "X is open with your message — attach the downloaded PFP, then post.",
+          pfpDownloaded
+            ? "X opened — click the image icon, attach your downloaded infected image, then post."
+            : "Download your infected image first, then attach it in X using the image button.",
         );
       }
     } catch {
-      setShareNotice("Could not open X — check your popup blocker and try again.");
+      setShareNotice("Share cancelled.");
     } finally {
       setSharingToX(false);
     }
@@ -433,21 +450,23 @@ export default function InfectionStation() {
                   You are now part of the outbreak.
                 </p>
 
-                <button
-                  type="button"
-                  className="rz-infection__download-btn"
-                  onClick={() => setShareModalOpen(true)}
-                >
-                  SHARE INFECTED NFT
-                </button>
+                <div className="rz-infection__complete-actions">
+                  <button
+                    type="button"
+                    className="rz-infection__download-btn"
+                    onClick={() => setShareModalOpen(true)}
+                  >
+                    SHARE INFECTED NFT
+                  </button>
 
-                <button
-                  type="button"
-                  className="rz-infection__reset"
-                  onClick={resetUpload}
-                >
-                  Infect another host
-                </button>
+                  <button
+                    type="button"
+                    className="rz-infection__reset"
+                    onClick={resetUpload}
+                  >
+                    Infect another host
+                  </button>
+                </div>
               </div>
             )}
           </section>
@@ -524,13 +543,20 @@ export default function InfectionStation() {
               />
             )}
 
+            {!useMobileShare && (
+              <ol className="rz-infection-modal__steps">
+                <li>Download your infected image</li>
+                <li>Open X and attach it to your post</li>
+              </ol>
+            )}
+
             <div className="rz-infection-modal__actions">
               <button
                 type="button"
                 className="rz-infection-modal__btn rz-infection-modal__btn--download"
                 onClick={onDownloadPfp}
               >
-                DOWNLOAD INFECTED PFP
+                DOWNLOAD INFECTED IMAGE
               </button>
               <button
                 type="button"

@@ -1,16 +1,8 @@
 # BlackWater Infection — GitHub Pages deploy
 
-Live site: **https://symesy9.github.io/blackwaterinfection/**
+Live site: **https://blackwater-labs.com/**
 
-## Why you see 404 on JS/CSS
-
-The build must use the same path GitHub Pages serves the site from. This repo uses:
-
-```
-/blackwaterinfection/
-```
-
-If `index.html` still points at `/ratzilla2/assets/...`, the browser will 404.
+Custom domain via `CNAME` → `blackwater-labs.com`. Production build uses base path `/`.
 
 ## Deploy steps (every time you update)
 
@@ -19,20 +11,21 @@ cd ratzilla2
 npm run publish
 ```
 
-Then **commit and push** these files to the **root** of the `blackwaterinfection` GitHub repo:
+Then **commit and push** these files to the **root** of your GitHub Pages repo:
 
 - `index.html`
 - `404.html`
+- `CNAME`
 - `assets/` (whole folder — includes hashed `.js` / `.css` **and** images/video)
 
 Do **not** push `src/` or `index.vite.html` (dev only).
 
-## Different host/path
+## Subpath deploy (legacy)
 
-Override the base path when building:
+If hosting under a subfolder (e.g. `/blackwaterinfection/`):
 
 ```bash
-VITE_BASE_PATH=/ratzilla2/ npm run publish
+VITE_BASE_PATH=/blackwaterinfection/ npm run publish
 ```
 
 ## Dev vs production
@@ -45,4 +38,9 @@ VITE_BASE_PATH=/ratzilla2/ npm run publish
 
 ## SPA routes
 
-`404.html` is a copy of `index.html` so `/blackwaterinfection/infection` works after refresh when GitHub Pages is configured to use it.
+`404.html` is a copy of `index.html` so `/infection` works after refresh on GitHub Pages.
+
+## X share
+
+- **Phone / iPad:** tap **REPORT TO X** → choose **X** on the share menu → image + message attach to the post.
+- **Mac / desktop:** tap **DOWNLOAD INFECTED IMAGE**, then **REPORT TO X** → attach the download in X using the image button, then post.
