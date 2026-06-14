@@ -96,12 +96,55 @@ export async function copyBlobToClipboard(blob: Blob): Promise<void> {
     throw new Error("Clipboard image copy is not supported.");
   }
 
+  const pngBlob =
+    blob.type === "image/png" ? blob : new Blob([blob], { type: "image/png" });
+
   await navigator.clipboard.write([
-    new ClipboardItem({ "image/png": blob }),
+    new ClipboardItem({
+      "image/png": Promise.resolve(pngBlob),
+    }),
   ]);
 }
 
-export function shareOnX(text: string): void {
-  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-  window.open(url, "_blank", "noopener,noreferrer");
+export const X_INFECTION_SHARE_TEXT = `⚠️ INFECTION CONFIRMED ⚠️
+
+I have been registered as a Blackwater Subject.
+
+Containment protocols have failed.
+
+How many more have been exposed?
+
+#BLACKWATERINFECTION`;
+
+/** Opens X compose in the app (mobile) or a new tab (desktop). Call synchronously from a click handler. */
+export function openXCompose(text: string): boolean {
+  const url = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
+  const opened = window.open(url, "_blank", "noopener,noreferrer");
+  if (!opened) {
+    window.location.assign(url);
+    return true;
+  }
+  return true;
+}
+
+export type ShareInfectedResult = "x-compose" | "downloaded";
+
+/**
+ * Opens X compose with pre-filled copy, then puts the infected PFP on the
+ * clipboard so the user can paste it into the open post.
+ * X must open synchronously from the click handler to avoid popup blockers.
+ */
+export async function shareInfectedToX(
+  blob: Blob,
+  text: string = X_INFECTION_SHARE_TEXT,
+): Promise<ShareInfectedResult> {
+  openXCompose(text);
+
+  try {
+    await copyBlobToClipboard(blob);
+    return "x-compose";
+  } catch {
+    downloadBlob(blob, "infected-pfp.png");
+    return "downloaded";
+  }
 }

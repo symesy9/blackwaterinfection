@@ -19,11 +19,10 @@ import {
   type InfectionOverlay,
 } from "../lib/infectionOverlays";
 import {
-  copyBlobToClipboard,
   downloadBlob,
   infectedFilename,
   mergeInfectionImage,
-  shareOnX,
+  shareInfectedToX,
 } from "../lib/mergeInfectionImage";
 import { incrementInfectionCount } from "../lib/infectionStats";
 
@@ -42,8 +41,6 @@ const PROGRESS_STEPS = [
   { value: 75, message: "Spreading infection..." },
   { value: 100, message: "Host compromised..." },
 ];
-
-const X_SHARE_TEXT = "I have been infected by @Ratzilla\n\n☣️🐀\n\n#Ratzilla #Infected";
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => {
@@ -72,6 +69,8 @@ export default function InfectionStation() {
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [sharingToX, setSharingToX] = useState(false);
 
   const controlsLocked =
     phase !== "idle" && phase !== "complete" ? true : phase === "complete";
@@ -137,6 +136,7 @@ export default function InfectionStation() {
     setStatusMessage("");
     setError(null);
     setShareNotice(null);
+    setShareModalOpen(false);
     setPreviewStackWidth(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, [previewUrl, infectedUrl]);
@@ -233,24 +233,46 @@ export default function InfectionStation() {
     }
   };
 
-  const onDownload = () => {
+  const onDownloadPfp = () => {
     if (!infectedBlob || !uploadedFile) return;
     downloadBlob(infectedBlob, infectedFilename(uploadedFile.name));
   };
 
-  const onCopyImage = async () => {
-    if (!infectedBlob) return;
+  const onReportToX = async () => {
+    if (!infectedBlob || sharingToX) return;
+    setShareNotice(null);
+    setSharingToX(true);
     try {
-      await copyBlobToClipboard(infectedBlob);
-      setShareNotice("Infected image copied to clipboard.");
+      const result = await shareInfectedToX(infectedBlob);
+      if (result === "x-compose") {
+        setShareNotice(
+          "X is open with your message — paste your infected PFP (⌘V / Ctrl+V, or tap and hold → Paste on mobile), then post.",
+        );
+      } else {
+        setShareNotice(
+          "X is open with your message — attach the downloaded PFP, then post.",
+        );
+      }
     } catch {
-      setShareNotice("Copy failed — use download instead.");
+      setShareNotice("Could not open X — check your popup blocker and try again.");
+    } finally {
+      setSharingToX(false);
     }
   };
 
-  const onShareX = () => {
-    shareOnX(X_SHARE_TEXT);
-  };
+  useEffect(() => {
+    if (!shareModalOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShareModalOpen(false);
+        setShareNotice(null);
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [shareModalOpen]);
 
   const displayImage = infectedUrl ?? previewUrl;
   const stageClass = useMemo(() => {
@@ -414,35 +436,18 @@ export default function InfectionStation() {
                 <button
                   type="button"
                   className="rz-infection__download-btn"
-                  onClick={onDownload}
+                  onClick={() => setShareModalOpen(true)}
                 >
-                  DOWNLOAD INFECTED NFT
+                  SHARE INFECTED NFT
                 </button>
 
-                <div className="rz-infection__share">
-                  <p className="rz-infection__share-title">Spread the infection.</p>
-                  <div className="rz-infection__share-actions">
-                    <button type="button" onClick={() => void onCopyImage()}>
-                      Copy Image
-                    </button>
-                    <button type="button" onClick={onDownload}>
-                      Download
-                    </button>
-                    <button type="button" onClick={onShareX}>
-                      Share on X
-                    </button>
-                  </div>
-                  {shareNotice && (
-                    <p className="rz-infection__share-note">{shareNotice}</p>
-                  )}
-                  <button
-                    type="button"
-                    className="rz-infection__reset"
-                    onClick={resetUpload}
-                  >
-                    Infect another host
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="rz-infection__reset"
+                  onClick={resetUpload}
+                >
+                  Infect another host
+                </button>
               </div>
             )}
           </section>
@@ -468,6 +473,81 @@ export default function InfectionStation() {
         <div className="rz-infection__flash-white" aria-hidden="true" />
         <div className="rz-infection__glitch-lines" aria-hidden="true" />
       </div>
+
+      {shareModalOpen && phase === "complete" && (
+        <div
+          className="rz-infection-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rz-infection-modal-title"
+        >
+          <button
+            type="button"
+            className="rz-infection-modal__backdrop"
+            aria-label="Close"
+            onClick={() => {
+              setShareModalOpen(false);
+              setShareNotice(null);
+            }}
+          />
+          <div className="rz-infection-modal__panel">
+            <button
+              type="button"
+              className="rz-infection-modal__close"
+              aria-label="Close"
+              onClick={() => {
+                setShareModalOpen(false);
+                setShareNotice(null);
+              }}
+            >
+              ×
+            </button>
+
+            <p
+              id="rz-infection-modal-title"
+              className="rz-infection-modal__headline"
+            >
+              ⚠️ INFECTION CONFIRMED ⚠️
+            </p>
+
+            <div className="rz-infection-modal__body">
+              <p>You have been registered as a Blackwater Subject.</p>
+              <p>The outbreak continues to spread.</p>
+              <p>Help us identify additional subjects.</p>
+            </div>
+
+            {infectedUrl && (
+              <img
+                src={infectedUrl}
+                alt="Your infected PFP"
+                className="rz-infection-modal__preview"
+              />
+            )}
+
+            <div className="rz-infection-modal__actions">
+              <button
+                type="button"
+                className="rz-infection-modal__btn rz-infection-modal__btn--download"
+                onClick={onDownloadPfp}
+              >
+                DOWNLOAD INFECTED PFP
+              </button>
+              <button
+                type="button"
+                className="rz-infection-modal__btn rz-infection-modal__btn--x"
+                disabled={sharingToX}
+                onClick={() => void onReportToX()}
+              >
+                {sharingToX ? "OPENING X…" : "REPORT TO X"}
+              </button>
+            </div>
+
+            {shareNotice && (
+              <p className="rz-infection-modal__note">{shareNotice}</p>
+            )}
+          </div>
+        </div>
+      )}
     </RzAmbientStage>
   );
 }
