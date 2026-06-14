@@ -5,8 +5,15 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/** GitHub Pages project path — override with VITE_BASE_PATH=/other-path/ if needed */
+const deployBase = process.env.VITE_BASE_PATH
+  ? process.env.VITE_BASE_PATH.endsWith("/")
+    ? process.env.VITE_BASE_PATH
+    : `${process.env.VITE_BASE_PATH}/`
+  : "/blackwaterinfection/";
+
 export default defineConfig(({ command }) => ({
-  base: command === "build" ? "/ratzilla2/" : "/",
+  base: command === "build" ? deployBase : "/",
   plugins: [
     react(),
     command === "serve" && {

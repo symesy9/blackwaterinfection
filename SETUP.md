@@ -1,14 +1,16 @@
-# RATZILLA2 — deploy to GitHub / littleollielabs.com
+# BlackWater Infection — GitHub Pages deploy
 
-## The `main.tsx` 404 error
+Live site: **https://symesy9.github.io/blackwaterinfection/**
 
-Your live site is serving the **dev** HTML file, which contains:
+## Why you see 404 on JS/CSS
 
-```html
-<script type="module" src="/src/main.tsx"></script>
+The build must use the same path GitHub Pages serves the site from. This repo uses:
+
+```
+/blackwaterinfection/
 ```
 
-Browsers cannot run that on GitHub. You must deploy the **built** files instead.
+If `index.html` still points at `/ratzilla2/assets/...`, the browser will 404.
 
 ## Deploy steps (every time you update)
 
@@ -17,22 +19,30 @@ cd ratzilla2
 npm run publish
 ```
 
-Then **commit and push** these files (not `src/` or `index.vite.html`):
+Then **commit and push** these files to the **root** of the `blackwaterinfection` GitHub repo:
 
-- `ratzilla2/index.html`
-- `ratzilla2/404.html`
-- `ratzilla2/assets/` (whole folder)
+- `index.html`
+- `404.html`
+- `assets/` (whole folder — includes hashed `.js` / `.css` **and** images/video)
 
-Open: **https://littleollielabs.com/ratzilla2/** (must include `/ratzilla2/`)
+Do **not** push `src/` or `index.vite.html` (dev only).
 
-## Dev vs production files
+## Different host/path
+
+Override the base path when building:
+
+```bash
+VITE_BASE_PATH=/ratzilla2/ npm run publish
+```
+
+## Dev vs production
 
 | File | Purpose |
 |------|---------|
 | `index.vite.html` | Local dev only (`npm run dev`) |
-| `index.html` | **Production** — created by `npm run publish` |
-| `src/` | Source code — not needed on the server |
+| `index.html` | Production — created by `npm run publish` |
+| `src/` | Source code — not needed on GitHub Pages |
 
-## CSP / `eval` warning in DevTools
+## SPA routes
 
-If you see **"Content Security Policy blocks eval"** with `lockdown-install.js`, that comes from a **browser extension** (e.g. MetaMask), not from RATZILLA2. The production build does not use `eval`. You can ignore it, or test in a private/incognito window with extensions disabled.
+`404.html` is a copy of `index.html` so `/blackwaterinfection/infection` works after refresh when GitHub Pages is configured to use it.

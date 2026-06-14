@@ -1,5 +1,6 @@
 /**
- * Copy Vite build output from dist/ into ratzilla2/ for GitHub Pages at /ratzilla2/
+ * Copy Vite build output from dist/ into ratzilla2/ for GitHub Pages deploy.
+ * Default base path: /blackwaterinfection/ (see vite.config.ts).
  */
 import { cpSync, existsSync, readFileSync, readdirSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -43,10 +44,13 @@ if (existsSync(distAssets)) {
 }
 
 const jsMatch = indexHtml.match(/src="([^"]+\.js)"/);
-console.log("\n✓ Ready for GitHub. Upload/commit these files:");
-console.log("  ratzilla2/index.html");
-console.log("  ratzilla2/404.html");
-console.log("  ratzilla2/assets/   (entire folder)");
+const baseMatch = indexHtml.match(/src="(\/[^"]+\/assets\/[^"]+\.js)"/);
+const liveBase = baseMatch ? baseMatch[1].replace(/\/assets\/[^/]+\.js$/, "") : "/blackwaterinfection";
+
+console.log("\n✓ Ready for GitHub Pages. Commit/push these files to repo root:");
+console.log("  index.html");
+console.log("  404.html");
+console.log("  assets/   (entire folder)");
 if (jsMatch) console.log(`\n  Bundle: ${jsMatch[1]}`);
 console.log("\n  Do NOT upload index.vite.html or src/ — dev only.");
-console.log("  Live URL: https://yoursite.com/ratzilla2/\n");
+console.log(`  Live URL: https://symesy9.github.io${liveBase}/\n`);
