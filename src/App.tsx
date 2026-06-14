@@ -4,6 +4,7 @@ import Transmission from "./pages/Transmission";
 
 export default function App() {
   const basename = undefined;
+
   return (
     <BrowserRouter basename={basename}>
       <Routes>
