@@ -3,7 +3,7 @@ import InfectionStation from "./pages/InfectionStation";
 import Transmission from "./pages/Transmission";
 
 export default function App() {
-  const basename = undefined;
+  const basename = import.meta.env.BASE_URL.replace(/\/$/, "") || undefined;
 
   return (
     <BrowserRouter basename={basename}>

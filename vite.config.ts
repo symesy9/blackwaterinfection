@@ -5,16 +5,12 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-<<<<<<< HEAD
 /** Production base path. Default `/` for custom domain (blackwater-labs.com). Override for subpath deploys. */
 const deployBase = process.env.VITE_BASE_PATH
   ? process.env.VITE_BASE_PATH.endsWith("/")
     ? process.env.VITE_BASE_PATH
     : `${process.env.VITE_BASE_PATH}/`
   : "/";
-=======
-const deployBase = "/";
->>>>>>> 14fff33938409c0429335ca96f76ca5541246093
 
 export default defineConfig(({ command }) => ({
   base: command === "build" ? deployBase : "/",
@@ -33,9 +29,9 @@ export default defineConfig(({ command }) => ({
       },
     },
   ].filter(Boolean),
- build: {
-  rollupOptions: {
-    input: resolve(__dirname, "index.html"),
+  build: {
+    rollupOptions: {
+      input: resolve(__dirname, "index.vite.html"),
+    },
   },
-},
 }));
