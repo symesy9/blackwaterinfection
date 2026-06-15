@@ -9,7 +9,6 @@ import {
 } from "react";
 import { Link } from "react-router-dom";
 import RzAmbientStage from "../components/RzAmbientStage";
-import BlackwaterXLink from "../components/BlackwaterXLink";
 import OutbreakStatus from "../components/OutbreakStatus";
 import {
   getDefaultOverlay,
@@ -476,9 +475,6 @@ export default function InfectionStation() {
         )}
 
         <footer className="rz-infection__footer">
-          <nav className="rz-bw-socials" aria-label="Blackwater media">
-            <BlackwaterXLink />
-          </nav>
           <p className="rz-infection__powered">
             Powered by Little Ollie Labs for BlackWater Labs
           </p>

@@ -762,8 +762,7 @@ body {
     transform 0.25s ease;
 }
 
-.rz2-stage.is-live .rz-bw-x,
-.rz-infection__footer .rz-bw-x {
+.rz2-stage.is-live .rz-bw-x {
   opacity: 1;
   animation: none;
 }
