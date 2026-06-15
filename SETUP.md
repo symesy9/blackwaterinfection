@@ -42,5 +42,4 @@ VITE_BASE_PATH=/blackwaterinfection/ npm run publish
 
 ## X share
 
-- **Phone / iPad:** tap **REPORT TO X** → choose **X** on the share menu → image + message attach to the post.
-- **Mac / desktop:** tap **DOWNLOAD INFECTED IMAGE**, then **REPORT TO X** → attach the download in X using the image button, then post.
+Tap **DOWNLOAD INFECTED IMAGE**, then **REPORT TO X** — opens X directly (website on desktop, X app on phone) with your message pre-filled. Attach the downloaded image in your post, then publish.

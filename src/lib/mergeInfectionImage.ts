@@ -106,8 +106,8 @@ export async function copyBlobToClipboard(blob: Blob): Promise<void> {
   ]);
 }
 
-/** iPhone / iPad / Android — native share attaches image directly to X. */
-export function prefersMobileXShare(): boolean {
+/** Phone / tablet — used for download-first share UX copy. */
+export function isMobileDevice(): boolean {
   const ua = navigator.userAgent;
   if (/Android/i.test(ua)) return true;
   if (/iPhone|iPod|iPad/i.test(ua)) return true;
@@ -115,36 +115,8 @@ export function prefersMobileXShare(): boolean {
   return false;
 }
 
-/** Shrink large infected PNGs so clipboard + X paste work reliably. */
-async function blobForShare(blob: Blob, maxWidth = 1200): Promise<Blob> {
-  if (blob.size <= 1.5 * 1024 * 1024) return blob;
-
-  return new Promise((resolve) => {
-    const img = new Image();
-    const url = URL.createObjectURL(blob);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const scale = Math.min(1, maxWidth / (img.naturalWidth || maxWidth));
-      const width = Math.max(1, Math.round((img.naturalWidth || maxWidth) * scale));
-      const height = Math.max(1, Math.round((img.naturalHeight || maxWidth) * scale));
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        resolve(blob);
-        return;
-      }
-      ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob((next) => resolve(next ?? blob), "image/png", 0.92);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve(blob);
-    };
-    img.src = url;
-  });
-}
+/** @deprecated Use isMobileDevice */
+export const prefersMobileXShare = isMobileDevice;
 
 export const X_INFECTION_SHARE_TEXT = `⚠️ INFECTION CONFIRMED ⚠️
 
@@ -154,39 +126,54 @@ Containment protocols have failed.
 
 How many more have been exposed?
 
+@Blackwater_Z26
+
 #BLACKWATERINFECTION`;
 
 function buildXIntentUrl(text: string): string {
   return `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
 }
 
-/** Opens X compose with pre-filled message. */
+/**
+ * Opens X compose with pre-filled message.
+ * Desktop: x.com in a new tab. Mobile: X app via deep link, then web intent fallback.
+ */
 export function openXCompose(text: string): void {
-  const url = buildXIntentUrl(text);
-  const opened = window.open(url, "_blank", "noopener,noreferrer");
-  if (!opened) window.location.assign(url);
-}
+  const webUrl = buildXIntentUrl(text);
 
-export type ShareInfectedResult = "native-share" | "x-text";
+  if (isMobileDevice()) {
+    const appUrl = `twitter://post?message=${encodeURIComponent(text)}`;
+    let fallbackTimer = 0;
 
-/** Phone / iPad: share sheet with image + text. Desktop uses openXCompose instead. */
-export async function shareInfectedToX(
-  blob: Blob,
-  text: string = X_INFECTION_SHARE_TEXT,
-): Promise<ShareInfectedResult> {
-  const shareBlob = await blobForShare(blob);
-  const file = new File([shareBlob], "infected-pfp.png", { type: "image/png" });
+    const clearFallback = () => {
+      if (fallbackTimer) window.clearTimeout(fallbackTimer);
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", onHide);
+    };
 
-  for (const payload of [{ files: [file], text }, { files: [file] }]) {
-    try {
-      if (navigator.canShare && !navigator.canShare(payload)) continue;
-      await navigator.share(payload);
-      return "native-share";
-    } catch (err) {
-      if ((err as Error).name === "AbortError") throw err;
-    }
+    const onHide = () => {
+      if (document.hidden) clearFallback();
+    };
+
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", onHide, { once: true });
+
+    fallbackTimer = window.setTimeout(() => {
+      clearFallback();
+      window.location.assign(webUrl);
+    }, 900);
+
+    window.location.href = appUrl;
+    return;
   }
 
+  const opened = window.open(webUrl, "_blank", "noopener,noreferrer");
+  if (!opened) window.location.assign(webUrl);
+}
+
+/** Opens X compose — image is attached manually after download. */
+export function shareInfectedToX(
+  text: string = X_INFECTION_SHARE_TEXT,
+): void {
   openXCompose(text);
-  return "x-text";
 }

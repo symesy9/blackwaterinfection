@@ -9,6 +9,7 @@ import {
 } from "react";
 import { Link } from "react-router-dom";
 import RzAmbientStage from "../components/RzAmbientStage";
+import BlackwaterXLink from "../components/BlackwaterXLink";
 import OutbreakStatus from "../components/OutbreakStatus";
 import {
   getDefaultOverlay,
@@ -21,9 +22,8 @@ import {
 import {
   downloadBlob,
   infectedFilename,
+  isMobileDevice,
   mergeInfectionImage,
-  openXCompose,
-  prefersMobileXShare,
   shareInfectedToX,
   X_INFECTION_SHARE_TEXT,
 } from "../lib/mergeInfectionImage";
@@ -75,7 +75,6 @@ export default function InfectionStation() {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [sharingToX, setSharingToX] = useState(false);
   const [pfpDownloaded, setPfpDownloaded] = useState(false);
-  const useMobileShare = prefersMobileXShare();
 
   const controlsLocked =
     phase !== "idle" && phase !== "complete" ? true : phase === "complete";
@@ -243,35 +242,24 @@ export default function InfectionStation() {
     if (!infectedBlob || !uploadedFile) return;
     downloadBlob(infectedBlob, infectedFilename(uploadedFile.name));
     setPfpDownloaded(true);
-    if (!useMobileShare) {
-      setShareNotice("Downloaded — now tap REPORT TO X and attach the image in your post.");
-    }
+    setShareNotice("Downloaded — now tap REPORT TO X and attach the image in your post.");
   };
 
-  const onReportToX = async () => {
+  const onReportToX = () => {
     if (!infectedBlob || sharingToX) return;
     setShareNotice(null);
     setSharingToX(true);
     try {
-      if (useMobileShare && typeof navigator.share === "function") {
-        const result = await shareInfectedToX(infectedBlob);
-        if (result === "native-share") {
-          setShareNotice(
-            "Choose X on the share menu — your infected image and message are ready to post.",
-          );
-        } else {
-          setShareNotice("X opened with your message — attach your image, then post.");
-        }
-      } else {
-        openXCompose(X_INFECTION_SHARE_TEXT);
-        setShareNotice(
-          pfpDownloaded
+      shareInfectedToX(X_INFECTION_SHARE_TEXT);
+      setShareNotice(
+        isMobileDevice()
+          ? pfpDownloaded
+            ? "Opening X — attach your downloaded infected image, then post."
+            : "Opening X — download your infected image first, then attach it in your post."
+          : pfpDownloaded
             ? "X opened — click the image icon, attach your downloaded infected image, then post."
-            : "Download your infected image first, then attach it in X using the image button.",
-        );
-      }
-    } catch {
-      setShareNotice("Share cancelled.");
+            : "X opened — download your infected image first, then attach it using the image button.",
+      );
     } finally {
       setSharingToX(false);
     }
@@ -487,6 +475,15 @@ export default function InfectionStation() {
           </div>
         )}
 
+        <footer className="rz-infection__footer">
+          <nav className="rz-bw-socials" aria-label="Blackwater media">
+            <BlackwaterXLink />
+          </nav>
+          <p className="rz-infection__powered">
+            Powered by Little Ollie Labs for BlackWater Labs
+          </p>
+        </footer>
+
         <div className="rz-infection__alarm-flash" aria-hidden="true" />
         <div className="rz-infection__burst" aria-hidden="true" />
         <div className="rz-infection__flash-white" aria-hidden="true" />
@@ -543,12 +540,10 @@ export default function InfectionStation() {
               />
             )}
 
-            {!useMobileShare && (
-              <ol className="rz-infection-modal__steps">
-                <li>Download your infected image</li>
-                <li>Open X and attach it to your post</li>
-              </ol>
-            )}
+            <ol className="rz-infection-modal__steps">
+              <li>Download your infected image</li>
+              <li>Open X and attach it to your post</li>
+            </ol>
 
             <div className="rz-infection-modal__actions">
               <button
@@ -562,7 +557,7 @@ export default function InfectionStation() {
                 type="button"
                 className="rz-infection-modal__btn rz-infection-modal__btn--x"
                 disabled={sharingToX}
-                onClick={() => void onReportToX()}
+                onClick={onReportToX}
               >
                 {sharingToX ? "OPENING X…" : "REPORT TO X"}
               </button>

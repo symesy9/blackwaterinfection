@@ -1188,7 +1188,29 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: center;
-  margin-top: 1rem;
+  margin-top: 1.25rem;
+}
+
+.rz-infection__footer {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(100, 80, 84, 0.25);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.rz-infection__footer .rz-bw-socials {
+  width: 100%;
+}
+
+.rz-infection__powered {
+  margin: 0;
+  font-size: clamp(0.58rem, 2.2vw, 0.68rem);
+  letter-spacing: 0.1em;
+  color: rgba(175, 168, 164, 0.65);
 }
 
 .rz-infection__variant {
