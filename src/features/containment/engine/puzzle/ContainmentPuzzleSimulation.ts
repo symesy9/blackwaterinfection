@@ -272,7 +272,7 @@ export class ContainmentPuzzleSimulation {
       cellId,
       this.cells,
       this.adjacency,
-      getStageConfig(this.director.stage).zeroFlood,
+      getStageConfig(this.director.stage).revealBurstMax,
     );
     for (const id of revealed) {
       this.events.push({ type: "safe_reveal", cellId: id });
@@ -328,8 +328,7 @@ export class ContainmentPuzzleSimulation {
 
     if (this.hint === 1) {
       this.hint = 2;
-      this.mode = "lock";
-      this.message = "SWITCH TO LOCK — CONTAIN THE INFECTION";
+      this.message = "SELECT INFECTED ROOM — PRESS LOCK";
       const target = this.findTutorialLockTarget();
       if (target) {
         target.highlight = true;

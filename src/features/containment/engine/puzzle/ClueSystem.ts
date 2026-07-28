@@ -35,29 +35,22 @@ export function refreshClues(
   return updated;
 }
 
+/**
+ * Reveal safe cells from a scan. Zero-clue cells ripple into neighbors,
+ * capped at revealBurstMax so one tap opens a small pocket — not the whole board.
+ */
 export function revealSafeCell(
   cellId: string,
   cells: Map<string, PuzzleCell>,
   adjacency: Map<string, string[]>,
-  allowZeroFlood = true,
+  revealBurstMax = 1,
 ): string[] {
-  if (!allowZeroFlood) {
-    const cell = cells.get(cellId);
-    if (!cell || cell.isCore || cell.state === "locked" || cell.isInfected) {
-      return [];
-    }
-    if (cell.state === "revealed") return [];
-    cell.state = "revealed";
-    cell.clue = computeClue(cellId, cells, adjacency);
-    cell.cluePulse = false;
-    return [cellId];
-  }
-
+  const burstCap = Math.max(1, revealBurstMax);
   const revealed: string[] = [];
   const queue = [cellId];
   const visited = new Set<string>();
 
-  while (queue.length > 0) {
+  while (queue.length > 0 && revealed.length < burstCap) {
     const id = queue.shift()!;
     if (visited.has(id)) continue;
     visited.add(id);
@@ -72,14 +65,14 @@ export function revealSafeCell(
     cell.cluePulse = false;
     revealed.push(id);
 
-    if (cell.clue === 0) {
-      for (const nid of adjacency.get(id) ?? []) {
-        const neighbor = cells.get(nid);
-        if (!neighbor || neighbor.isCore) continue;
-        if (neighbor.state === "hidden") {
-          queue.push(nid);
-        }
-      }
+    if (cell.clue !== 0 || revealed.length >= burstCap) continue;
+
+    for (const nid of adjacency.get(id) ?? []) {
+      if (revealed.length + queue.length >= burstCap) break;
+      const neighbor = cells.get(nid);
+      if (!neighbor || neighbor.isCore) continue;
+      if (neighbor.state !== "hidden" || neighbor.isInfected) continue;
+      if (!visited.has(nid)) queue.push(nid);
     }
   }
 

@@ -36,6 +36,7 @@ export class PuzzleBoardRenderer {
   render(
     snapshot: PuzzleSnapshot,
     camera: { x: number; y: number; scale: number },
+    selectedCellId: string | null = null,
   ): void {
     const w = this.canvas.width / this.dpr;
     const h = this.canvas.height / this.dpr;
@@ -75,7 +76,7 @@ export class PuzzleBoardRenderer {
     }
 
     for (const cell of snapshot.cells) {
-      this.drawCell(cell, snapshot.coreExposed);
+      this.drawCell(cell, snapshot.coreExposed, cell.id === selectedCellId);
     }
 
     this.ctx.restore();
@@ -84,6 +85,7 @@ export class PuzzleBoardRenderer {
   private drawCell(
     cell: PuzzleSnapshot["cells"][0],
     coreExposed: boolean,
+    selected: boolean,
   ): void {
     const center = cell.displayPos;
     const corners = hexCorners(center, HEX_SIZE - 3);
@@ -126,6 +128,12 @@ export class PuzzleBoardRenderer {
 
     this.ctx.fill();
     this.ctx.stroke();
+
+    if (selected) {
+      this.ctx.strokeStyle = "#6ec8e8";
+      this.ctx.lineWidth = 4;
+      this.ctx.stroke();
+    }
 
     if (cell.state === "locked") {
       this.drawLockOverlay(center);
@@ -184,5 +192,20 @@ export class PuzzleBoardRenderer {
       }
     }
     return best?.id ?? null;
+  }
+
+  cellCanvasPosition(
+    cellId: string,
+    snapshot: PuzzleSnapshot,
+    camera: { x: number; y: number; scale: number },
+    canvasW: number,
+    canvasH: number,
+  ): { x: number; y: number } | null {
+    const cell = snapshot.cells.find((c) => c.id === cellId);
+    if (!cell) return null;
+    return {
+      x: canvasW / 2 + camera.x + cell.displayPos.x * camera.scale,
+      y: canvasH / 2 + camera.y + cell.displayPos.y * camera.scale,
+    };
   }
 }

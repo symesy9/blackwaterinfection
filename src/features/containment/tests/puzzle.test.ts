@@ -86,7 +86,7 @@ describe("ContainmentPuzzleSimulation", () => {
     expect(updated?.clue).toBeGreaterThanOrEqual(0);
   });
 
-  it("stage 1 scan reveals one cell at a time (no zero flood)", () => {
+  it("scan opens a small pocket in zero regions (burst cap)", () => {
     const pickZero = (board: ReturnType<typeof generateBoard>) =>
       [...board.cells.values()].find((c) => {
         if (c.isCore || c.isInfected) return false;
@@ -96,14 +96,21 @@ describe("ContainmentPuzzleSimulation", () => {
     const boardSingle = generateBoard(1, new SeededRandom(901));
     const zeroSafe = pickZero(boardSingle);
     expect(zeroSafe).toBeDefined();
-    const single = revealSafeCell(zeroSafe!.id, boardSingle.cells, boardSingle.adjacency, false);
+    const single = revealSafeCell(zeroSafe!.id, boardSingle.cells, boardSingle.adjacency, 1);
     expect(single).toHaveLength(1);
+
+    const boardBurst = generateBoard(1, new SeededRandom(901));
+    const zeroBurst = pickZero(boardBurst);
+    expect(zeroBurst).toBeDefined();
+    const burst = revealSafeCell(zeroBurst!.id, boardBurst.cells, boardBurst.adjacency, 4);
+    expect(burst.length).toBeGreaterThan(1);
+    expect(burst.length).toBeLessThanOrEqual(4);
 
     const boardFlood = generateBoard(1, new SeededRandom(901));
     const zeroFlood = pickZero(boardFlood);
     expect(zeroFlood).toBeDefined();
-    const flooded = revealSafeCell(zeroFlood!.id, boardFlood.cells, boardFlood.adjacency, true);
-    expect(flooded.length).toBeGreaterThan(1);
+    const flooded = revealSafeCell(zeroFlood!.id, boardFlood.cells, boardFlood.adjacency, 999);
+    expect(flooded.length).toBeGreaterThan(4);
   });
 
   it("scanning infected triggers outbreak penalty", () => {
@@ -148,7 +155,7 @@ describe("ContainmentPuzzleSimulation", () => {
   it("spread countdown triggers spread", () => {
     const s = sim(3000);
     const beforeInfected = s.getSnapshot().cells.filter((c) => c.state === "infected").length;
-    s.stepMs(25_000);
+    s.stepMs(45_000);
     const after = s.getSnapshot().cells.filter((c) => c.state === "infected").length;
     expect(after).toBeGreaterThanOrEqual(beforeInfected);
   });
@@ -178,9 +185,9 @@ describe("ContainmentPuzzleSimulation", () => {
     const s1 = getStageConfig(1);
     const s2 = getStageConfig(2);
     const s6 = getStageConfig(6);
-    expect(s1.infectionCount).toBe(3);
-    expect(s1.zeroFlood).toBe(false);
-    expect(s1.startLocks).toBe(2);
+    expect(s1.infectionCount).toBe(4);
+    expect(s1.revealBurstMax).toBe(4);
+    expect(s1.extraRingCoords.length).toBeGreaterThan(0);
     expect(s2.infectionCount).toBe(s1.infectionCount);
     expect(s6.infectionCount).toBeGreaterThan(s1.infectionCount);
     expect(s6.spreadIntervalMs).toBeLessThan(s1.spreadIntervalMs);

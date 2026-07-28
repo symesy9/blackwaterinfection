@@ -36,8 +36,8 @@ export interface PuzzleStageConfig {
   spreadGraceMs: number;
   startLocks: number;
   carryLockCap: number;
-  /** Auto-expand zero regions (Minesweeper flood) */
-  zeroFlood: boolean;
+  /** Max safe cells one scan can reveal (zero-region ripple cap) */
+  revealBurstMax: number;
   /** Min axial distance between infection placements */
   minInfectionSeparation: number;
 }
