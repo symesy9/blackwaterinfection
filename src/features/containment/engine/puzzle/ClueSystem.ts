@@ -39,7 +39,20 @@ export function revealSafeCell(
   cellId: string,
   cells: Map<string, PuzzleCell>,
   adjacency: Map<string, string[]>,
+  allowZeroFlood = true,
 ): string[] {
+  if (!allowZeroFlood) {
+    const cell = cells.get(cellId);
+    if (!cell || cell.isCore || cell.state === "locked" || cell.isInfected) {
+      return [];
+    }
+    if (cell.state === "revealed") return [];
+    cell.state = "revealed";
+    cell.clue = computeClue(cellId, cells, adjacency);
+    cell.cluePulse = false;
+    return [cellId];
+  }
+
   const revealed: string[] = [];
   const queue = [cellId];
   const visited = new Set<string>();

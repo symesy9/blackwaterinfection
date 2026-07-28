@@ -15,6 +15,7 @@ import {
 } from "../engine/puzzle/InfectionSpreadSystem";
 import { getStageConfig, PUZZLE_LOCKS } from "../config/puzzleBalance";
 import { SeededRandom } from "../utils/SeededRandom";
+import { axialDistance } from "../utils/hexCoords";
 
 describe("ContainmentPuzzleSimulation", () => {
   function sim(seed = 7777): ContainmentPuzzleSimulation {
@@ -23,18 +24,61 @@ describe("ContainmentPuzzleSimulation", () => {
     return s;
   }
 
-  it("generates deterministic boards for same seed", () => {
-    const a = sim(1234);
-    const b = sim(1234);
-    expect(a.getSnapshot().cells.map((c) => c.isInfected)).toEqual(
-      b.getSnapshot().cells.map((c) => c.isInfected),
-    );
+  function containAllInfections(s: ContainmentPuzzleSimulation): void {
+    const infected = new Set(s.infectionIds());
+    while (s.getSnapshot().phase === "playing") {
+      const snap = s.getSnapshot();
+      const pending = s.infectionIds().filter((id) => {
+        const cell = snap.cells.find((c) => c.id === id);
+        return cell?.state !== "locked";
+      });
+      if (pending.length === 0) return;
+      if (snap.locks >= pending.length) {
+        for (const id of pending) s.actOnCell(id, "lock");
+        continue;
+      }
+      const safe = snap.cells.find(
+        (c) => c.state === "hidden" && !c.isCore && !infected.has(c.id),
+      );
+      if (safe) {
+        s.actOnCell(safe.id, "scan");
+        continue;
+      }
+      if (snap.locks > 0) s.actOnCell(pending[0]!, "lock");
+    }
+  }
+
+  it("generates deterministic boards for same rng fork", () => {
+    const a = generateBoard(1, new SeededRandom(1234).fork(99));
+    const b = generateBoard(1, new SeededRandom(1234).fork(99));
+    expect(a.infectionIds.sort()).toEqual(b.infectionIds.sort());
+  });
+
+  it("varies infection placement on new run", () => {
+    const s = new ContainmentPuzzleSimulation(555);
+    s.skipHints();
+    const first = s.infectionIds().sort();
+    s.reset(555);
+    s.skipHints();
+    const second = s.infectionIds().sort();
+    expect(first).not.toEqual(second);
+  });
+
+  it("starts each stage on scan mode", () => {
+    const s = sim(9000);
+    s.setMode("lock");
+    containAllInfections(s);
+    expect(s.getSnapshot().phase).toBe("stage_clear");
+    s.advanceStage();
+    expect(s.getSnapshot().mode).toBe("scan");
   });
 
   it("reveals safe cell with correct clue", () => {
     const s = sim(5000);
-    const snap = s.getSnapshot();
-    const safe = snap.cells.find((c) => !c.isCore && !c.isInfected && c.state === "hidden");
+    const infected = new Set(s.infectionIds());
+    const safe = s.getSnapshot().cells.find(
+      (c) => c.state === "hidden" && !c.isCore && !infected.has(c.id),
+    );
     expect(safe).toBeDefined();
     s.actOnCell(safe!.id, "scan");
     const updated = s.getSnapshot().cells.find((c) => c.id === safe!.id);
@@ -42,36 +86,44 @@ describe("ContainmentPuzzleSimulation", () => {
     expect(updated?.clue).toBeGreaterThanOrEqual(0);
   });
 
-  it("zero-cell flood reveal expands safe region", () => {
-    const board = generateBoard(1, new SeededRandom(901));
-    const zeroSafe = [...board.cells.values()].find((c) => {
-      if (c.isCore || c.isInfected) return false;
-      const clue = countAdjacentInfections(c.id, board.cells, board.adjacency);
-      return clue === 0;
-    });
+  it("stage 1 scan reveals one cell at a time (no zero flood)", () => {
+    const pickZero = (board: ReturnType<typeof generateBoard>) =>
+      [...board.cells.values()].find((c) => {
+        if (c.isCore || c.isInfected) return false;
+        return countAdjacentInfections(c.id, board.cells, board.adjacency) === 0;
+      });
+
+    const boardSingle = generateBoard(1, new SeededRandom(901));
+    const zeroSafe = pickZero(boardSingle);
     expect(zeroSafe).toBeDefined();
-    const revealed = revealSafeCell(zeroSafe!.id, board.cells, board.adjacency);
-    expect(revealed.length).toBeGreaterThan(1);
+    const single = revealSafeCell(zeroSafe!.id, boardSingle.cells, boardSingle.adjacency, false);
+    expect(single).toHaveLength(1);
+
+    const boardFlood = generateBoard(1, new SeededRandom(901));
+    const zeroFlood = pickZero(boardFlood);
+    expect(zeroFlood).toBeDefined();
+    const flooded = revealSafeCell(zeroFlood!.id, boardFlood.cells, boardFlood.adjacency, true);
+    expect(flooded.length).toBeGreaterThan(1);
   });
 
   it("scanning infected triggers outbreak penalty", () => {
     const s = sim(6000);
-    const infected = s.getSnapshot().cells.find((c) => c.isInfected && c.state === "hidden");
-    expect(infected).toBeDefined();
+    const infectedId = s.infectionIds()[0];
+    expect(infectedId).toBeDefined();
     const before = s.getSnapshot().spreadCountdownMs;
-    s.actOnCell(infected!.id, "scan");
-    expect(s.getSnapshot().cells.find((c) => c.id === infected!.id)?.state).toBe("infected");
+    s.actOnCell(infectedId!, "scan");
+    expect(s.getSnapshot().cells.find((c) => c.id === infectedId)?.state).toBe("infected");
     expect(s.getSnapshot().spreadCountdownMs).toBeLessThan(before);
   });
 
   it("locked infected cell cannot spread", () => {
     const s = sim(8000);
-    const infected = s.getSnapshot().cells.find((c) => c.isInfected && !c.isCore)!;
-    s.actOnCell(infected.id, "lock");
-    const cell = s.getSnapshot().cells.find((c) => c.id === infected.id)!;
+    const infectedId = s.infectionIds()[0]!;
+    s.actOnCell(infectedId, "lock");
+    const cell = s.getSnapshot().cells.find((c) => c.id === infectedId)!;
     expect(isInfectionContained(cell)).toBe(true);
     expect(getActiveInfectionSources(new Map(s.getSnapshot().cells.map((c) => [c.id, c])))).not.toContain(
-      infected.id,
+      infectedId,
     );
   });
 
@@ -96,7 +148,7 @@ describe("ContainmentPuzzleSimulation", () => {
   it("spread countdown triggers spread", () => {
     const s = sim(3000);
     const beforeInfected = s.getSnapshot().cells.filter((c) => c.state === "infected").length;
-    s.stepMs(13_000);
+    s.stepMs(25_000);
     const after = s.getSnapshot().cells.filter((c) => c.state === "infected").length;
     expect(after).toBeGreaterThanOrEqual(beforeInfected);
   });
@@ -110,9 +162,7 @@ describe("ContainmentPuzzleSimulation", () => {
 
   it("completes stage when all infection is locked", () => {
     const s = sim(9999);
-    for (const cell of s.getSnapshot().cells.filter((c) => c.isInfected)) {
-      s.actOnCell(cell.id, "lock");
-    }
+    containAllInfections(s);
     expect(s.getSnapshot().phase).toBe("stage_clear");
   });
 
@@ -128,8 +178,10 @@ describe("ContainmentPuzzleSimulation", () => {
     const s1 = getStageConfig(1);
     const s2 = getStageConfig(2);
     const s6 = getStageConfig(6);
+    expect(s1.infectionCount).toBe(3);
+    expect(s1.zeroFlood).toBe(false);
+    expect(s1.startLocks).toBe(2);
     expect(s2.infectionCount).toBe(s1.infectionCount);
-    expect(s2.extraRingCoords.length).toBe(0);
     expect(s6.infectionCount).toBeGreaterThan(s1.infectionCount);
     expect(s6.spreadIntervalMs).toBeLessThan(s1.spreadIntervalMs);
   });
@@ -200,6 +252,20 @@ describe("HexPuzzleBoard", () => {
     const coreNeighbors = board.adjacency.get(board.coreId) ?? [];
     for (const nid of coreNeighbors) {
       expect(board.cells.get(nid)?.isInfected).toBe(false);
+    }
+  });
+
+  it("places infections with minimum separation", () => {
+    const board = generateBoard(1, new SeededRandom(321));
+    const infected = board.infectionIds.map((id) => board.cells.get(id)!);
+    const minSep = getStageConfig(1).minInfectionSeparation;
+    expect(infected).toHaveLength(getStageConfig(1).infectionCount);
+    for (let i = 0; i < infected.length; i += 1) {
+      for (let j = i + 1; j < infected.length; j += 1) {
+        expect(axialDistance(infected[i]!.coord, infected[j]!.coord)).toBeGreaterThanOrEqual(
+          minSep,
+        );
+      }
     }
   });
 

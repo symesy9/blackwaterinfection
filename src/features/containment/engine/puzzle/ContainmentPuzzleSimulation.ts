@@ -44,6 +44,8 @@ export class ContainmentPuzzleSimulation {
   private stageClearAt = 0;
   private lastTimestamp: number | null = null;
   private tutorialLockTarget: string | null = null;
+  /** Changes each stage/run so infection placement is not identical every time */
+  private layoutSalt = 0;
 
   tick = 0;
   elapsedMs = 0;
@@ -55,14 +57,29 @@ export class ContainmentPuzzleSimulation {
     this.seed = seed ?? (((Date.now() ^ 0x5eed) >>> 0) || 1);
     this.seedLabel = formatIncidentLabel(this.seed);
     this.rng = new SeededRandom(this.seed);
+    this.layoutSalt = this.rng.int(1, 2_000_000_000);
     this.lockSystem = new LockSystem(3);
     this.loadStage(1, true);
   }
 
+  private boardRngForStage(stage: number): SeededRandom {
+    let entropy = (Math.random() * 0xffffffff) >>> 0;
+    if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+      const buf = new Uint32Array(1);
+      crypto.getRandomValues(buf);
+      entropy ^= buf[0]!;
+    }
+    this.layoutSalt =
+      ((this.layoutSalt + 1) ^ entropy ^ (Date.now() >>> 0) ^ this.seed ^ stage * 991) >>>
+        0 || 1;
+    return new SeededRandom(this.layoutSalt);
+  }
+
   private loadStage(stage: number, fresh: boolean): void {
+    this.mode = "scan";
     this.director.stage = stage;
     const cfg = getStageConfig(stage);
-    const board = generateBoard(stage, this.rng.fork(stage * 991));
+    const board = generateBoard(stage, this.boardRngForStage(stage));
     this.cells = board.cells;
     this.adjacency = board.adjacency;
     this.coreId = board.coreId;
@@ -104,6 +121,7 @@ export class ContainmentPuzzleSimulation {
     this.seed = seed ?? this.seed;
     this.seedLabel = formatIncidentLabel(this.seed);
     this.rng = new SeededRandom(this.seed);
+    this.layoutSalt = this.rng.int(1, 2_000_000_000) ^ (Date.now() >>> 0);
     this.director.reset();
     this.events = [];
     this.hint = 0;
@@ -170,6 +188,7 @@ export class ContainmentPuzzleSimulation {
         ...c,
         coord: { ...c.coord },
         displayPos: { ...c.displayPos },
+        isInfected: c.state === "hidden" ? false : c.isInfected,
       })),
       locks: this.lockSystem.locks,
       maxLocks: this.lockSystem.maxLocks,
@@ -249,7 +268,12 @@ export class ContainmentPuzzleSimulation {
       return true;
     }
 
-    const revealed = revealSafeCell(cellId, this.cells, this.adjacency);
+    const revealed = revealSafeCell(
+      cellId,
+      this.cells,
+      this.adjacency,
+      getStageConfig(this.director.stage).zeroFlood,
+    );
     for (const id of revealed) {
       this.events.push({ type: "safe_reveal", cellId: id });
     }
@@ -396,13 +420,20 @@ export class ContainmentPuzzleSimulation {
     if (this.phase !== "stage_clear") return;
     this.director.advance();
     this.phase = "playing";
+    this.mode = "scan";
     this.message = "PROTECT THE CORE";
+    if (this.hint === 2) this.hint = 3;
+    this.tutorialLockTarget = null;
     this.loadStage(this.director.stage, false);
-    if (this.hint < 3) this.setupTutorialHighlights();
   }
 
   computeScore(): number {
     return this.score;
+  }
+
+  /** Ground-truth infection ids (tests / debug) */
+  infectionIds(): string[] {
+    return [...this.cells.values()].filter((c) => c.isInfected).map((c) => c.id);
   }
 
   clearCluePulses(): void {

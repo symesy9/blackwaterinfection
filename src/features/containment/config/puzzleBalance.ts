@@ -6,14 +6,12 @@ export const PUZZLE_SIM = {
 } as const;
 
 export const PUZZLE_LOCKS = {
-  /** Safe reveals needed to earn one lock charge */
   revealsPerLock: 2,
   maxStored: 6,
   stageCarryCap: 3,
 } as const;
 
 export const PUZZLE_OUTBREAK = {
-  /** Reduce spread countdown by this many ms when scanning infected */
   scanPenaltyMs: 3000,
   bonusSpreadOnScan: 0,
 } as const;
@@ -34,7 +32,6 @@ export const PUZZLE_HINTS = {
   tutorialLockCellId: null as string | null,
 } as const;
 
-/** Six outer-ring cells used when expanding from 19 → 25 cells */
 const RING3_SAMPLE = [
   { q: 3, r: 0 },
   { q: 0, r: 3 },
@@ -44,30 +41,30 @@ const RING3_SAMPLE = [
   { q: 3, r: -3 },
 ] as const;
 
-/**
- * Gentle early ramp — stage 2 stays on the same 19-cell board with the same
- * infection count; board size and threats increase only from stage 3 onward.
- */
 export const PUZZLE_STAGES = [
   {
     stage: 1,
     radius: 2,
     extraRingCoords: [] as { q: number; r: number }[],
-    infectionCount: 2,
+    infectionCount: 3,
     spreadIntervalMs: 14_000,
     spreadGraceMs: 10_000,
-    startLocks: 3,
-    carryLockCap: 3,
+    startLocks: 2,
+    carryLockCap: 2,
+    zeroFlood: false,
+    minInfectionSeparation: 3,
   },
   {
     stage: 2,
     radius: 2,
     extraRingCoords: [],
-    infectionCount: 2,
+    infectionCount: 3,
     spreadIntervalMs: 13_000,
     spreadGraceMs: 8000,
-    startLocks: 3,
-    carryLockCap: 3,
+    startLocks: 2,
+    carryLockCap: 2,
+    zeroFlood: false,
+    minInfectionSeparation: 3,
   },
   {
     stage: 3,
@@ -77,17 +74,21 @@ export const PUZZLE_STAGES = [
     spreadIntervalMs: 12_000,
     spreadGraceMs: 6000,
     startLocks: 2,
-    carryLockCap: 3,
+    carryLockCap: 2,
+    zeroFlood: false,
+    minInfectionSeparation: 2,
   },
   {
     stage: 4,
     radius: 2,
     extraRingCoords: [...RING3_SAMPLE],
-    infectionCount: 3,
+    infectionCount: 4,
     spreadIntervalMs: 11_000,
     spreadGraceMs: 5000,
     startLocks: 2,
     carryLockCap: 2,
+    zeroFlood: true,
+    minInfectionSeparation: 2,
   },
   {
     stage: 5,
@@ -98,36 +99,44 @@ export const PUZZLE_STAGES = [
     spreadGraceMs: 4000,
     startLocks: 2,
     carryLockCap: 2,
+    zeroFlood: true,
+    minInfectionSeparation: 2,
   },
   {
     stage: 6,
     radius: 3,
     extraRingCoords: [],
-    infectionCount: 4,
+    infectionCount: 5,
     spreadIntervalMs: 9000,
     spreadGraceMs: 3000,
     startLocks: 2,
     carryLockCap: 2,
+    zeroFlood: true,
+    minInfectionSeparation: 2,
   },
   {
     stage: 7,
     radius: 3,
     extraRingCoords: [],
-    infectionCount: 5,
+    infectionCount: 6,
     spreadIntervalMs: 7000,
     spreadGraceMs: 2000,
     startLocks: 2,
     carryLockCap: 2,
+    zeroFlood: true,
+    minInfectionSeparation: 2,
   },
   {
     stage: 8,
     radius: 3,
     extraRingCoords: [],
-    infectionCount: 6,
+    infectionCount: 7,
     spreadIntervalMs: 5000,
     spreadGraceMs: 0,
     startLocks: 2,
     carryLockCap: 2,
+    zeroFlood: true,
+    minInfectionSeparation: 2,
   },
 ] as const;
 

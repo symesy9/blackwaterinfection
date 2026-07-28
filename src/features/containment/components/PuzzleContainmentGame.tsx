@@ -34,17 +34,45 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
   const [snapshot, setSnapshot] = useState<PuzzleSnapshot | null>(null);
   const [persisted, setPersisted] = useState(loadPersistence);
   const [showPause, setShowPause] = useState(false);
+  const [uiMode, setUiMode] = useState<PuzzleMode>("scan");
+  const lastStageRef = useRef(0);
+
+  const syncScanMode = useCallback(() => {
+    simRef.current?.setMode("scan");
+    setUiMode("scan");
+  }, []);
+
   const [showHowToPlay, setShowHowToPlay] = useState(false);
 
+  useEffect(() => {
+    if (!snapshot) return;
+    if (snapshot.hint === 2 && snapshot.mode === "lock") {
+      setUiMode("lock");
+    }
+  }, [snapshot?.hint, snapshot?.mode]);
+
+  useEffect(() => {
+    if (!snapshot) return;
+    if (snapshot.stage !== lastStageRef.current) {
+      lastStageRef.current = snapshot.stage;
+      syncScanMode();
+    }
+  }, [snapshot?.stage, syncScanMode]);
+
   const startGame = useCallback((seed?: number) => {
+    lastStageRef.current = 0;
+    syncScanMode();
     const p = loadPersistence();
-    const sim = new ContainmentPuzzleSimulation(seed ?? p.lastSeed ?? undefined);
+    const gameSeed =
+      seed ??
+      (((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0) || 1);
+    const sim = new ContainmentPuzzleSimulation(gameSeed);
     if (p.tutorialComplete) sim.skipHints();
     simRef.current = sim;
     recordedRef.current = false;
     setSnapshot(sim.getSnapshot());
     setShowPause(false);
-  }, []);
+  }, [syncScanMode]);
 
   useEffect(() => {
     startGame();
@@ -139,15 +167,15 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
     if (snapshot?.phase !== "stage_clear") return;
     const t = window.setTimeout(() => {
       simRef.current?.advanceStage();
+      syncScanMode();
     }, 1400);
     return () => window.clearTimeout(t);
-  }, [snapshot?.phase, snapshot?.stage]);
+  }, [snapshot?.phase, snapshot?.stage, syncScanMode]);
 
   const actOnCell = (cellId: string, mode: PuzzleMode) => {
     audioRef.current.unlock();
     const sim = simRef.current;
     if (!sim || sim.phase !== "playing") return;
-    sim.setMode(mode);
     sim.actOnCell(cellId, mode);
   };
 
@@ -171,8 +199,7 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
     );
     if (!cellId) return;
 
-    const mode: PuzzleMode =
-      e.button === 2 ? "lock" : sim.getSnapshot().mode;
+    const mode: PuzzleMode = e.button === 2 ? "lock" : uiMode;
     actOnCell(cellId, mode);
   };
 
@@ -225,8 +252,12 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
 
       {snap?.phase === "playing" && (
         <PuzzleModeBar
-          mode={snap.mode}
-          onModeChange={(mode) => simRef.current?.setMode(mode)}
+          key={`mode-stage-${snap.stage}`}
+          mode={uiMode}
+          onModeChange={(mode) => {
+            setUiMode(mode);
+            simRef.current?.setMode(mode);
+          }}
         />
       )}
 

@@ -104,13 +104,28 @@ export function generateBoard(stage: number, rng: SeededRandom): GeneratedBoard 
     if (candidates.length < cfg.infectionCount) continue;
 
     const shuffled = attemptRng.shuffle([...candidates]);
-    const infectionIds = shuffled.slice(0, cfg.infectionCount);
+    const infectionIds: string[] = [];
+    const minSep = cfg.minInfectionSeparation ?? 2;
+
+    for (const id of shuffled) {
+      if (infectionIds.length >= cfg.infectionCount) break;
+      const coord = cells.get(id)!.coord;
+      const tooClose = infectionIds.some((existingId) => {
+        const existing = cells.get(existingId)!;
+        return axialDistance(coord, existing.coord) < minSep;
+      });
+      if (tooClose) continue;
+      infectionIds.push(id);
+    }
+
+    if (infectionIds.length < cfg.infectionCount) continue;
+
     for (const id of infectionIds) {
       cells.get(id)!.isInfected = true;
     }
 
     const adjacency = buildAdjacency(cells);
-    if (!validateBoard(cells, adjacency, coreId, cfg.infectionCount)) continue;
+    if (!validateBoard(cells, adjacency, coreId, cfg.infectionCount, minSep)) continue;
 
     return { cells, adjacency, coreId, infectionIds };
   }
@@ -123,6 +138,7 @@ export function validateBoard(
   adjacency: Map<string, string[]>,
   coreId: string,
   infectionCount: number,
+  minInfectionSeparation = 2,
 ): boolean {
   const core = cells.get(coreId);
   if (!core) return false;
@@ -134,6 +150,14 @@ export function validateBoard(
     if (axialDistance(cell.coord, core.coord) < 2) return false;
     const neighbors = adjacency.get(cell.id) ?? [];
     if (neighbors.includes(coreId)) return false;
+  }
+
+  for (let i = 0; i < infected.length; i += 1) {
+    for (let j = i + 1; j < infected.length; j += 1) {
+      if (axialDistance(infected[i]!.coord, infected[j]!.coord) < minInfectionSeparation) {
+        return false;
+      }
+    }
   }
 
   const safeCandidates = [...cells.values()].filter(
