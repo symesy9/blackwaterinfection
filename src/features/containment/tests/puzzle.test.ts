@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { ContainmentPuzzleSimulation } from "../engine/puzzle/ContainmentPuzzleSimulation";
-import { generateBoard } from "../engine/puzzle/HexPuzzleBoard";
+import { generateBoard, boardCoordsForStage } from "../engine/puzzle/HexPuzzleBoard";
 import {
   countAdjacentInfections,
   computeClue,
   revealSafeCell,
   refreshClues,
+  contaminateAdjacentRevealed,
 } from "../engine/puzzle/ClueSystem";
 import { LockSystem, isInfectionContained } from "../engine/puzzle/LockSystem";
 import {
@@ -123,6 +124,24 @@ describe("ContainmentPuzzleSimulation", () => {
     expect(s.getSnapshot().spreadCountdownMs).toBeLessThan(before);
   });
 
+  it("scanning infected contaminates adjacent revealed rooms", () => {
+    const board = generateBoard(1, new SeededRandom(6000));
+    const infectedId = board.infectionIds[0]!;
+    const neighborId = board.adjacency.get(infectedId)!.find((nid) => {
+      const c = board.cells.get(nid)!;
+      return !c.isInfected && !c.isCore;
+    });
+    expect(neighborId).toBeDefined();
+    const neighbor = board.cells.get(neighborId!)!;
+    neighbor.state = "revealed";
+    neighbor.clue = 1;
+
+    contaminateAdjacentRevealed(infectedId, board.cells, board.adjacency);
+
+    expect(neighbor.state).toBe("infected");
+    expect(neighbor.isInfected).toBe(true);
+  });
+
   it("locked infected cell cannot spread", () => {
     const s = sim(8000);
     const infectedId = s.infectionIds()[0]!;
@@ -142,6 +161,32 @@ describe("ContainmentPuzzleSimulation", () => {
     expect(s.getSnapshot().locks).toBe(before - 1);
   });
 
+  it("unlocking a cell refunds lock charge and restores state", () => {
+    const s = sim(7000);
+    const infected = new Set(s.infectionIds());
+    const safe = s.getSnapshot().cells.find(
+      (c) => !c.isCore && c.state === "hidden" && !infected.has(c.id),
+    )!;
+    s.actOnCell(safe.id, "scan");
+    s.actOnCell(safe.id, "lock");
+    expect(s.getSnapshot().cells.find((c) => c.id === safe.id)?.state).toBe("locked");
+
+    const before = s.getSnapshot().locks;
+    s.actOnCell(safe.id, "unlock");
+    expect(s.getSnapshot().locks).toBe(before + 1);
+    expect(s.getSnapshot().cells.find((c) => c.id === safe.id)?.state).toBe("revealed");
+  });
+
+  it("unlocking contained infection reactivates it", () => {
+    const s = sim(8000);
+    const infectedId = s.infectionIds()[0]!;
+    s.actOnCell(infectedId, "lock");
+    s.actOnCell(infectedId, "unlock");
+    const cell = s.getSnapshot().cells.find((c) => c.id === infectedId)!;
+    expect(cell.state).toBe("infected");
+    expect(isInfectionContained(cell)).toBe(false);
+  });
+
   it("awards lock after configured safe reveals", () => {
     const lockSys = new LockSystem(1);
     let earned = false;
@@ -155,7 +200,7 @@ describe("ContainmentPuzzleSimulation", () => {
   it("spread countdown triggers spread", () => {
     const s = sim(3000);
     const beforeInfected = s.getSnapshot().cells.filter((c) => c.state === "infected").length;
-    s.stepMs(45_000);
+    s.stepMs(95_000);
     const after = s.getSnapshot().cells.filter((c) => c.state === "infected").length;
     expect(after).toBeGreaterThanOrEqual(beforeInfected);
   });
@@ -187,8 +232,8 @@ describe("ContainmentPuzzleSimulation", () => {
     const s6 = getStageConfig(6);
     expect(s1.infectionCount).toBe(4);
     expect(s1.revealBurstMax).toBe(4);
-    expect(s1.extraRingCoords.length).toBeGreaterThan(0);
-    expect(s2.infectionCount).toBe(s1.infectionCount);
+    expect(s1.spreadGraceMs).toBeGreaterThan(s6.spreadGraceMs);
+    expect(s2.omitCoords.length).toBeGreaterThan(0);
     expect(s6.infectionCount).toBeGreaterThan(s1.infectionCount);
     expect(s6.spreadIntervalMs).toBeLessThan(s1.spreadIntervalMs);
   });
@@ -274,6 +319,12 @@ describe("HexPuzzleBoard", () => {
         );
       }
     }
+  });
+
+  it("uses different board shapes per stage", () => {
+    const sizes = [1, 2, 3, 4, 5, 6].map((stage) => boardCoordsForStage(stage).length);
+    expect(new Set(sizes).size).toBeGreaterThan(3);
+    expect(boardCoordsForStage(1).length).toBeGreaterThan(boardCoordsForStage(2).length);
   });
 
   it("builds adjacency for all cells", () => {

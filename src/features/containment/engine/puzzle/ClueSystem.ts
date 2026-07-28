@@ -83,3 +83,22 @@ export function markInfectedVisible(cell: PuzzleCell): void {
   cell.state = "infected";
   cell.clue = null;
 }
+
+/** When infection is scanned, adjacent already-revealed rooms are contaminated. */
+export function contaminateAdjacentRevealed(
+  sourceId: string,
+  cells: Map<string, PuzzleCell>,
+  adjacency: Map<string, string[]>,
+): string[] {
+  const contaminated: string[] = [];
+  for (const nid of adjacency.get(sourceId) ?? []) {
+    const neighbor = cells.get(nid);
+    if (!neighbor || neighbor.isCore) continue;
+    if (neighbor.state !== "revealed") continue;
+    if (neighbor.isInfected) continue;
+    neighbor.isInfected = true;
+    markInfectedVisible(neighbor);
+    contaminated.push(nid);
+  }
+  return contaminated;
+}

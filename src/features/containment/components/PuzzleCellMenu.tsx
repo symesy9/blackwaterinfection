@@ -11,9 +11,10 @@ interface PuzzleCellMenuProps {
   wrapRef: React.RefObject<HTMLElement | null>;
   selectedCell: PuzzleCell;
   locks: number;
+  maxLocks: number;
   onScan: () => void;
   onLock: () => void;
-  onClose: () => void;
+  onUnlock: () => void;
 }
 
 function canScan(cell: PuzzleCell): boolean {
@@ -24,14 +25,19 @@ function canLock(cell: PuzzleCell): boolean {
   return !cell.isCore && cell.state !== "locked";
 }
 
+function canUnlock(cell: PuzzleCell, locks: number, maxLocks: number): boolean {
+  return cell.state === "locked" && locks < maxLocks;
+}
+
 export default function PuzzleCellMenu({
   anchor,
   wrapRef,
   selectedCell,
   locks,
+  maxLocks,
   onScan,
   onLock,
-  onClose,
+  onUnlock,
 }: PuzzleCellMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState(anchor);
@@ -44,19 +50,29 @@ export default function PuzzleCellMenu({
       return;
     }
 
-    const pad = 10;
+    const pad = 8;
     const mw = menu.offsetWidth;
     const mh = menu.offsetHeight;
     const ww = wrap.clientWidth;
     const wh = wrap.clientHeight;
 
-    const x = Math.min(Math.max(mw / 2 + pad, anchor.x), ww - mw / 2 - pad);
-    const y = Math.min(Math.max(mh + pad, anchor.y), wh - pad);
+    let x = anchor.x + 18;
+    let y = anchor.y;
+
+    if (x + mw + pad > ww) {
+      x = anchor.x - mw - 18;
+    }
+    if (x < pad) x = pad;
+    if (x + mw > ww - pad) x = ww - mw - pad;
+
+    y = Math.min(Math.max(mh / 2 + pad, y), wh - mh / 2 - pad);
+
     setPosition({ x, y });
-  }, [anchor, wrapRef, selectedCell.id]);
+  }, [anchor, wrapRef, selectedCell.id, selectedCell.state]);
 
   const scanReady = canScan(selectedCell);
   const lockReady = canLock(selectedCell);
+  const unlockReady = canUnlock(selectedCell, locks, maxLocks);
 
   return (
     <div
@@ -67,35 +83,36 @@ export default function PuzzleCellMenu({
       aria-label="Room actions"
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className="cp-cell-menu__head">
-        <span className="cp-cell-menu__eyebrow">Room actions</span>
-        <button type="button" className="cp-cell-menu__close" onClick={onClose} aria-label="Close">
-          ✕
-        </button>
-      </div>
-      <div className="cp-cell-menu__actions">
-        {scanReady && (
-          <button
-            type="button"
-            className="cp-cell-menu__btn cp-cell-menu__btn--scan"
-            onClick={onScan}
-          >
-            Scan
-          </button>
-        )}
-        {lockReady && (
-          <button
-            type="button"
-            className="cp-cell-menu__btn cp-cell-menu__btn--lock"
-            disabled={locks <= 0}
-            onClick={onLock}
-          >
-            {locks > 0 ? "Lock" : "No locks"}
-          </button>
-        )}
-      </div>
       {scanReady && (
-        <p className="cp-cell-menu__hint">Tap room again to scan quickly</p>
+        <button
+          type="button"
+          className="cp-cell-menu__btn cp-cell-menu__btn--scan"
+          onClick={onScan}
+        >
+          Scan
+        </button>
+      )}
+      {lockReady && (
+        <button
+          type="button"
+          className="cp-cell-menu__btn cp-cell-menu__btn--lock"
+          disabled={locks <= 0}
+          onClick={onLock}
+        >
+          Lock
+        </button>
+      )}
+      {unlockReady && (
+        <button
+          type="button"
+          className="cp-cell-menu__btn cp-cell-menu__btn--unlock"
+          onClick={onUnlock}
+        >
+          Unlock
+        </button>
+      )}
+      {selectedCell.state === "locked" && !unlockReady && (
+        <span className="cp-cell-menu__note">Lock storage full</span>
       )}
     </div>
   );

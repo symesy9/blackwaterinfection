@@ -13,12 +13,10 @@ import PuzzlePauseMenu from "./PuzzlePauseMenu";
 import PuzzleStageClear from "./PuzzleStageClear";
 
 const HINT_TEXT = [
-  "TAP A ROOM — CHOOSE SCAN",
+  "TAP A ROOM — SCAN OR LOCK",
   "NUMBERS SHOW NEARBY INFECTION",
-  "TAP ROOM — CHOOSE LOCK",
+  "TAP INFECTED ROOM — LOCK IT",
 ];
-
-const LONG_PRESS_MS = 480;
 
 interface PuzzleContainmentGameProps {
   onReturn: () => void;
@@ -33,8 +31,6 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
   const audioRef = useRef(new AudioManager());
   const rafRef = useRef<number>(0);
   const recordedRef = useRef(false);
-  const longPressRef = useRef<{ timer: number; cellId: string } | null>(null);
-  const longPressFiredRef = useRef(false);
   const lastStageRef = useRef(0);
 
   const [snapshot, setSnapshot] = useState<PuzzleSnapshot | null>(null);
@@ -49,12 +45,12 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
     setCellMenuAnchor(null);
   }, []);
 
-  const positionMenuForCell = useCallback((cellId: string) => {
+  const anchorForCell = useCallback((cellId: string): CellMenuAnchor | null => {
     const wrap = boardWrapRef.current;
     const canvas = canvasRef.current;
     const renderer = rendererRef.current;
     const sim = simRef.current;
-    if (!wrap || !canvas || !renderer || !sim) return;
+    if (!wrap || !canvas || !renderer || !sim) return null;
 
     const canvasRect = canvas.getBoundingClientRect();
     const wrapRect = wrap.getBoundingClientRect();
@@ -65,14 +61,23 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
       canvasRect.width,
       canvasRect.height,
     );
-    if (!pos) return;
+    if (!pos) return null;
 
-    setSelectedCellId(cellId);
-    setCellMenuAnchor({
+    return {
       x: canvasRect.left - wrapRect.left + pos.x,
       y: canvasRect.top - wrapRect.top + pos.y,
-    });
+    };
   }, []);
+
+  const openCellMenu = useCallback(
+    (cellId: string) => {
+      const anchor = anchorForCell(cellId);
+      if (!anchor) return;
+      setSelectedCellId(cellId);
+      setCellMenuAnchor(anchor);
+    },
+    [anchorForCell],
+  );
 
   useEffect(() => {
     if (!snapshot) return;
@@ -85,8 +90,8 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
   useEffect(() => {
     if (snapshot?.hint !== 2) return;
     const target = snapshot.cells.find((c) => c.highlight);
-    if (target) positionMenuForCell(target.id);
-  }, [snapshot?.hint, snapshot?.stage, positionMenuForCell]);
+    if (target) openCellMenu(target.id);
+  }, [snapshot?.hint, snapshot?.stage, openCellMenu]);
 
   const startGame = useCallback((seed?: number) => {
     lastStageRef.current = 0;
@@ -124,11 +129,15 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
       if (parent && rendererRef.current) {
         rendererRef.current.resize(parent.clientWidth, parent.clientHeight);
       }
+      if (selectedCellId) {
+        const anchor = anchorForCell(selectedCellId);
+        if (anchor) setCellMenuAnchor(anchor);
+      }
     };
     resize();
     window.addEventListener("resize", resize);
     return () => window.removeEventListener("resize", resize);
-  }, []);
+  }, [anchorForCell, selectedCellId]);
 
   useEffect(() => {
     rendererRef.current?.setReducedMotion(persisted.reducedMotion);
@@ -159,6 +168,7 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
             audioRef.current.play("door_stress", 0.7);
           }
           if (ev.type === "lock_applied") audioRef.current.play("door_seal");
+          if (ev.type === "lock_removed") audioRef.current.play("confirm", 0.35);
           if (ev.type === "spread") {
             renderer?.noteSpread(ev.fromId, ev.toId);
             audioRef.current.play("mutation", 0.5);
@@ -201,13 +211,6 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
     return () => window.clearTimeout(t);
   }, [snapshot?.phase, snapshot?.stage, clearSelection]);
 
-  const cancelLongPress = () => {
-    if (longPressRef.current) {
-      window.clearTimeout(longPressRef.current.timer);
-      longPressRef.current = null;
-    }
-  };
-
   const actOnCell = (cellId: string, mode: PuzzleMode) => {
     audioRef.current.unlock();
     const sim = simRef.current;
@@ -223,17 +226,20 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
     return false;
   };
 
-  const scanCell = (cellId: string) => {
-    if (actOnCell(cellId, "scan")) {
+  const unlockCell = (cellId: string) => {
+    if (actOnCell(cellId, "unlock")) {
       clearSelection();
       return true;
     }
     return false;
   };
 
-  const openCellMenu = (cellId: string, x: number, y: number) => {
-    setSelectedCellId(cellId);
-    setCellMenuAnchor({ x, y });
+  const scanCell = (cellId: string) => {
+    if (actOnCell(cellId, "scan")) {
+      clearSelection();
+      return true;
+    }
+    return false;
   };
 
   const hitTestAt = (clientX: number, clientY: number): string | null => {
@@ -255,38 +261,15 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
   const handlePointerDown = (e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest(".cp-cell-menu")) return;
     if (!(e.target as HTMLElement).closest("canvas")) return;
-    longPressFiredRef.current = false;
-    cancelLongPress();
     cameraRef.current.beginPointer(e.clientX, e.clientY);
-
-    if (e.button !== 0) return;
-    const cellId = hitTestAt(e.clientX, e.clientY);
-    if (!cellId) return;
-
-    longPressRef.current = {
-      cellId,
-      timer: window.setTimeout(() => {
-        longPressFiredRef.current = true;
-        lockCell(cellId);
-        cancelLongPress();
-      }, LONG_PRESS_MS),
-    };
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     cameraRef.current.movePointer(e.clientX, e.clientY);
-    if (cameraRef.current.isDragging()) cancelLongPress();
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest(".cp-cell-menu")) return;
-
-    cancelLongPress();
-    if (longPressFiredRef.current) {
-      cameraRef.current.endPointer();
-      longPressFiredRef.current = false;
-      return;
-    }
 
     const wasTap = cameraRef.current.endPointer();
     if (!wasTap) return;
@@ -308,13 +291,12 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
     const cell = sim.getSnapshot().cells.find((c) => c.id === cellId);
     if (!cell || cell.isCore) return;
 
-    if (selectedCellId === cellId && cell.state === "hidden") {
-      scanCell(cellId);
+    if (selectedCellId === cellId) {
+      clearSelection();
       return;
     }
 
-    const wrapRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    openCellMenu(cellId, e.clientX - wrapRect.left, e.clientY - wrapRect.top);
+    openCellMenu(cellId);
   };
 
   const snap = snapshot;
@@ -356,7 +338,7 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
         <canvas
           ref={canvasRef}
           className="cp-board-canvas"
-          aria-label="Containment hex board — tap a room for actions"
+          aria-label="Containment hex board — tap a room for scan or lock"
         />
         {snap?.phase === "playing" && selectedCell && cellMenuAnchor && (
           <PuzzleCellMenu
@@ -364,9 +346,10 @@ export default function PuzzleContainmentGame({ onReturn }: PuzzleContainmentGam
             wrapRef={boardWrapRef}
             selectedCell={selectedCell}
             locks={snap.locks}
+            maxLocks={snap.maxLocks}
             onScan={() => selectedCellId && scanCell(selectedCellId)}
             onLock={() => selectedCellId && lockCell(selectedCellId)}
-            onClose={clearSelection}
+            onUnlock={() => selectedCellId && unlockCell(selectedCellId)}
           />
         )}
         <div className="cp-board-controls">

@@ -1,6 +1,7 @@
 /** Minesweeper-style containment puzzle — tunables */
 
 import type { PuzzleStageConfig } from "../types/puzzle";
+import type { AxialCoord } from "../types";
 
 export const PUZZLE_SIM = {
   tickMs: 50,
@@ -13,7 +14,7 @@ export const PUZZLE_LOCKS = {
   stageCarryCap: 3,
 } as const;
 
-/** Stages 6+ use this for full zero-region flood */
+/** Stages 8+ use this for full zero-region flood */
 export const PUZZLE_FULL_BURST = 999;
 
 export const PUZZLE_OUTBREAK = {
@@ -37,113 +38,162 @@ export const PUZZLE_HINTS = {
   tutorialLockCellId: null as string | null,
 } as const;
 
-const RING3_SAMPLE = [
+/** Outer ring bumps (6 cells around a radius-2 core) */
+const RING3_FULL: AxialCoord[] = [
   { q: 3, r: 0 },
   { q: 0, r: 3 },
   { q: -3, r: 3 },
   { q: -3, r: 0 },
   { q: 0, r: -3 },
   { q: 3, r: -3 },
-] as const;
+];
 
-export const PUZZLE_STAGES = [
+/** East wing extension */
+const RING3_EAST: AxialCoord[] = [
+  { q: 3, r: 0 },
+  { q: 3, r: -1 },
+  { q: 3, r: -2 },
+];
+
+/** North / south arms */
+const RING3_POLES: AxialCoord[] = [
+  { q: 0, r: 3 },
+  { q: 0, r: -3 },
+  { q: 1, r: 2 },
+  { q: -1, r: -2 },
+];
+
+/** Trim point cells on a radius-3 disk for a softer silhouette */
+const TRIM_R3_TIPS: AxialCoord[] = [
+  { q: 3, r: 0 },
+  { q: -3, r: 0 },
+  { q: 0, r: 3 },
+  { q: 0, r: -3 },
+  { q: 3, r: -3 },
+  { q: -3, r: 3 },
+];
+
+/** Flatten one face on radius 3 (east side missing) */
+const TRIM_R3_EAST_FACE: AxialCoord[] = [
+  { q: 3, r: 0 },
+  { q: 3, r: -1 },
+  { q: 3, r: -2 },
+  { q: 3, r: -3 },
+  { q: 2, r: 1 },
+];
+
+/** Diagonal trim on compact radius-2 boards */
+const TRIM_R2_DIAG: AxialCoord[] = [
+  { q: 2, r: -2 },
+  { q: -2, r: 2 },
+  { q: 2, r: 0 },
+];
+
+type StageDef = Omit<PuzzleStageConfig, "stage">;
+
+const STAGE_DEFS: StageDef[] = [
   {
-    stage: 1,
     radius: 2,
-    extraRingCoords: [...RING3_SAMPLE],
+    extraRingCoords: [...RING3_FULL],
+    omitCoords: [],
     infectionCount: 4,
-    spreadIntervalMs: 22_000,
-    spreadGraceMs: 18_000,
+    spreadIntervalMs: 35_000,
+    spreadGraceMs: 55_000,
     startLocks: 2,
     carryLockCap: 2,
     revealBurstMax: 4,
     minInfectionSeparation: 2,
   },
   {
-    stage: 2,
     radius: 2,
-    extraRingCoords: [...RING3_SAMPLE],
+    extraRingCoords: [],
+    omitCoords: [...TRIM_R2_DIAG],
     infectionCount: 4,
-    spreadIntervalMs: 20_000,
-    spreadGraceMs: 14_000,
+    spreadIntervalMs: 32_000,
+    spreadGraceMs: 48_000,
     startLocks: 2,
     carryLockCap: 2,
     revealBurstMax: 4,
     minInfectionSeparation: 2,
   },
   {
-    stage: 3,
     radius: 2,
-    extraRingCoords: [...RING3_SAMPLE],
-    infectionCount: 5,
-    spreadIntervalMs: 18_000,
-    spreadGraceMs: 12_000,
+    extraRingCoords: [...RING3_EAST],
+    omitCoords: [],
+    infectionCount: 4,
+    spreadIntervalMs: 30_000,
+    spreadGraceMs: 42_000,
     startLocks: 2,
     carryLockCap: 2,
     revealBurstMax: 5,
     minInfectionSeparation: 2,
   },
   {
-    stage: 4,
-    radius: 3,
-    extraRingCoords: [],
+    radius: 2,
+    extraRingCoords: [...RING3_POLES],
+    omitCoords: [{ q: -2, r: 0 }],
     infectionCount: 5,
-    spreadIntervalMs: 16_000,
-    spreadGraceMs: 10_000,
+    spreadIntervalMs: 28_000,
+    spreadGraceMs: 36_000,
     startLocks: 2,
     carryLockCap: 2,
     revealBurstMax: 5,
     minInfectionSeparation: 2,
   },
   {
-    stage: 5,
     radius: 3,
     extraRingCoords: [],
+    omitCoords: [...TRIM_R3_TIPS],
+    infectionCount: 5,
+    spreadIntervalMs: 26_000,
+    spreadGraceMs: 30_000,
+    startLocks: 2,
+    carryLockCap: 2,
+    revealBurstMax: 5,
+    minInfectionSeparation: 2,
+  },
+  {
+    radius: 3,
+    extraRingCoords: [],
+    omitCoords: [],
     infectionCount: 6,
-    spreadIntervalMs: 14_000,
-    spreadGraceMs: 8000,
+    spreadIntervalMs: 24_000,
+    spreadGraceMs: 24_000,
     startLocks: 2,
     carryLockCap: 2,
     revealBurstMax: 6,
     minInfectionSeparation: 2,
   },
   {
-    stage: 6,
     radius: 3,
-    extraRingCoords: [],
+    extraRingCoords: [...RING3_POLES],
+    omitCoords: [...TRIM_R3_EAST_FACE],
     infectionCount: 6,
-    spreadIntervalMs: 12_000,
-    spreadGraceMs: 6000,
+    spreadIntervalMs: 22_000,
+    spreadGraceMs: 18_000,
     startLocks: 2,
     carryLockCap: 2,
     revealBurstMax: 8,
     minInfectionSeparation: 2,
   },
   {
-    stage: 7,
     radius: 3,
-    extraRingCoords: [],
+    extraRingCoords: [...RING3_EAST],
+    omitCoords: [{ q: -3, r: 0 }, { q: -3, r: 1 }, { q: -2, r: 2 }],
     infectionCount: 7,
-    spreadIntervalMs: 10_000,
-    spreadGraceMs: 4000,
-    startLocks: 2,
-    carryLockCap: 2,
-    revealBurstMax: 10,
-    minInfectionSeparation: 2,
-  },
-  {
-    stage: 8,
-    radius: 3,
-    extraRingCoords: [],
-    infectionCount: 8,
-    spreadIntervalMs: 8000,
-    spreadGraceMs: 2000,
+    spreadIntervalMs: 18_000,
+    spreadGraceMs: 12_000,
     startLocks: 2,
     carryLockCap: 2,
     revealBurstMax: PUZZLE_FULL_BURST,
     minInfectionSeparation: 2,
   },
-] as const;
+];
+
+export const PUZZLE_STAGES = STAGE_DEFS.map((def, i) => ({
+  stage: i + 1,
+  ...def,
+}));
 
 export function getStageConfig(stage: number): PuzzleStageConfig {
   const idx = Math.min(stage - 1, PUZZLE_STAGES.length - 1);
@@ -151,5 +201,6 @@ export function getStageConfig(stage: number): PuzzleStageConfig {
   return {
     ...cfg,
     extraRingCoords: [...cfg.extraRingCoords],
+    omitCoords: [...cfg.omitCoords],
   };
 }

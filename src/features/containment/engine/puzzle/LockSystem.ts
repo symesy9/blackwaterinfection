@@ -23,6 +23,12 @@ export class LockSystem {
     return true;
   }
 
+  refundLock(): boolean {
+    if (this.locks >= this.maxLocks) return false;
+    this.locks += 1;
+    return true;
+  }
+
   onSafeReveal(): boolean {
     this.safeRevealsTowardLock += 1;
     if (this.safeRevealsTowardLock >= this.revealsPerLock && this.locks < this.maxLocks) {

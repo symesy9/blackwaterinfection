@@ -9,7 +9,7 @@ export type PuzzleCellState =
   | "locked"
   | "core";
 
-export type PuzzleMode = "scan" | "lock";
+export type PuzzleMode = "scan" | "lock" | "unlock";
 
 export type PuzzleHint = 0 | 1 | 2 | 3;
 
@@ -24,12 +24,17 @@ export interface PuzzleCell {
   clue: number | null;
   cluePulse: boolean;
   highlight: boolean;
+  /** State before locking — used when unlocking */
+  lockedFrom?: Exclude<PuzzleCellState, "locked" | "core">;
 }
 
 export interface PuzzleStageConfig {
   stage: number;
   radius: number;
+  /** Cells added outside the base hex disk */
   extraRingCoords: AxialCoord[];
+  /** Cells removed from the base shape (creates varied layouts) */
+  omitCoords: AxialCoord[];
   infectionCount: number;
   spreadIntervalMs: number;
   /** Extra time before the first spread on stage start */
@@ -70,6 +75,7 @@ export type PuzzleEvent =
   | { type: "safe_reveal"; cellId: string }
   | { type: "infected_reveal"; cellId: string }
   | { type: "lock_applied"; cellId: string }
+  | { type: "lock_removed"; cellId: string }
   | { type: "spread"; fromId: string; toId: string }
   | { type: "clue_update"; cellId: string }
   | { type: "core_exposure" }

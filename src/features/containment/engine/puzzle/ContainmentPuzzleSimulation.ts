@@ -14,7 +14,7 @@ import type {
 } from "../../types/puzzle";
 import { SeededRandom, formatIncidentLabel } from "../../utils/SeededRandom";
 import { generateBoard } from "./HexPuzzleBoard";
-import { revealSafeCell, refreshClues, markInfectedVisible } from "./ClueSystem";
+import { revealSafeCell, refreshClues, markInfectedVisible, contaminateAdjacentRevealed, computeClue } from "./ClueSystem";
 import { LockSystem, isInfectionContained } from "./LockSystem";
 import {
   pickSpreadTarget,
@@ -241,7 +241,9 @@ export class ContainmentPuzzleSimulation {
   actOnCell(cellId: string, mode?: PuzzleMode): boolean {
     if (this.phase !== "playing") return false;
     const action = mode ?? this.mode;
-    return action === "lock" ? this.lockCell(cellId) : this.scanCell(cellId);
+    if (action === "lock") return this.lockCell(cellId);
+    if (action === "unlock") return this.unlockCell(cellId);
+    return this.scanCell(cellId);
   }
 
   scanCell(cellId: string): boolean {
@@ -253,6 +255,7 @@ export class ContainmentPuzzleSimulation {
 
     if (cell.isInfected) {
       markInfectedVisible(cell);
+      const contaminated = contaminateAdjacentRevealed(cellId, this.cells, this.adjacency);
       this.score = Math.max(0, this.score - PUZZLE_SCORING.infectedScanPenalty);
       this.deductionStreak = 0;
       this.spreadCountdownMs = Math.max(
@@ -260,8 +263,14 @@ export class ContainmentPuzzleSimulation {
         this.spreadCountdownMs - PUZZLE_OUTBREAK.scanPenaltyMs,
       );
       this.events.push({ type: "infected_reveal", cellId });
+      for (const id of contaminated) {
+        this.events.push({ type: "infected_reveal", cellId: id });
+      }
       this.events.push({ type: "outbreak" });
-      this.message = "OUTBREAK — INFECTION REVEALED";
+      this.message =
+        contaminated.length > 0
+          ? "OUTBREAK — ADJACENT ROOMS CONTAMINATED"
+          : "OUTBREAK — INFECTION REVEALED";
       refreshClues(this.cells, this.adjacency);
       this.advanceTutorialAfterScan(true);
       this.checkCoreState();
@@ -294,6 +303,12 @@ export class ContainmentPuzzleSimulation {
     if (!this.lockSystem.canLock()) return false;
     if (!this.lockSystem.applyLock()) return false;
 
+    cell.lockedFrom =
+      cell.state === "infected"
+        ? "infected"
+        : cell.state === "revealed"
+          ? "revealed"
+          : "hidden";
     cell.state = "locked";
     cell.highlight = false;
     cell.clue = null;
@@ -310,6 +325,35 @@ export class ContainmentPuzzleSimulation {
     }
 
     if (this.hint === 2) this.hint = 3;
+
+    refreshClues(this.cells, this.adjacency);
+    this.checkCoreState();
+    this.checkStageComplete();
+    return true;
+  }
+
+  unlockCell(cellId: string): boolean {
+    const cell = this.cells.get(cellId);
+    if (!cell || cell.isCore || cell.state !== "locked") return false;
+    if (!this.lockSystem.refundLock()) return false;
+
+    const restore = cell.lockedFrom ?? (cell.isInfected ? "infected" : "hidden");
+    if (cell.isInfected || restore === "infected") {
+      cell.state = "infected";
+      cell.clue = null;
+    } else if (restore === "revealed") {
+      cell.state = "revealed";
+      cell.clue = computeClue(cellId, this.cells, this.adjacency);
+      cell.cluePulse = false;
+    } else {
+      cell.state = "hidden";
+      cell.clue = null;
+    }
+    cell.lockedFrom = undefined;
+    cell.highlight = false;
+
+    this.events.push({ type: "lock_removed", cellId });
+    this.message = "SEAL REMOVED";
 
     refreshClues(this.cells, this.adjacency);
     this.checkCoreState();

@@ -27,10 +27,12 @@ export function hexDisk(radius: number): AxialCoord[] {
 
 export function boardCoordsForStage(stage: number): AxialCoord[] {
   const cfg = getStageConfig(stage);
-  const base = hexDisk(cfg.radius);
+  const omitKeys = new Set(cfg.omitCoords.map(cellId));
+  const base = hexDisk(cfg.radius).filter((coord) => !omitKeys.has(cellId(coord)));
   const keys = new Set(base.map(cellId));
   for (const extra of cfg.extraRingCoords) {
     const id = cellId(extra);
+    if (omitKeys.has(id)) continue;
     if (!keys.has(id)) {
       keys.add(id);
       base.push({ ...extra });
