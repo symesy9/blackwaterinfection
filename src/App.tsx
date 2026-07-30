@@ -6,6 +6,7 @@ import Transmission from "./pages/Transmission";
 import WhitelistCheckerPage from "./pages/WhitelistCheckerPage";
 import AdminRouteGuard from "./features/whitelist/components/AdminRouteGuard";
 import AdminLayout from "./features/whitelist/components/AdminLayout";
+import { CONTAINMENT_GAME_PUBLIC } from "./lib/features";
 
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
@@ -30,7 +31,10 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Transmission />} />
         <Route path="/infection" element={<InfectionStation />} />
-        <Route path="/containment" element={<ContainmentProtocol />} />
+        <Route
+          path="/containment"
+          element={CONTAINMENT_GAME_PUBLIC ? <ContainmentProtocol /> : <Navigate to="/" replace />}
+        />
         <Route path="/whitelist" element={<WhitelistCheckerPage />} />
         <Route
           path="/admin/login"

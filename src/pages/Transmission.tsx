@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import BlackwaterXLink from "../components/BlackwaterXLink";
 import OutbreakStatus from "../components/OutbreakStatus";
 import { useRatzilla2Boot } from "../hooks/useRatzilla2Boot";
+import { CONTAINMENT_GAME_PUBLIC } from "../lib/features";
 
 const asset = (file: string) => `${import.meta.env.BASE_URL}assets/${file}`;
 
@@ -81,9 +82,11 @@ export default function Transmission() {
             <Link to="/infection" className="bw-landing-actions__btn bw-landing-actions__btn--infect">
               🦠 INFECT ME
             </Link>
-            <Link to="/containment" className="bw-landing-actions__btn bw-landing-actions__btn--game">
-              ▶ PLAY CONTAINMENT PROTOCOL
-            </Link>
+            {CONTAINMENT_GAME_PUBLIC ? (
+              <Link to="/containment" className="bw-landing-actions__btn bw-landing-actions__btn--game">
+                ▶ PLAY CONTAINMENT PROTOCOL
+              </Link>
+            ) : null}
             <Link to="/whitelist" className="bw-landing-actions__btn bw-landing-actions__btn--wl">
               ✓ CHECK YOUR WHITELIST
             </Link>
