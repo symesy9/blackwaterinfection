@@ -5,6 +5,7 @@ import "./styles/ratzilla2.css";
 import "./styles/infection.css";
 import "./styles/containment.css";
 import "./styles/whitelist.css";
+import "./styles/facility-lockdown.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
