@@ -1,4 +1,4 @@
-/* ═══ FACILITY LOCKDOWN — emergency overlay (public site) ═══ */
+/* ═══ FACILITY ACCESS LOG — recovered log overlay (public site) ═══ */
 
 html.fl-lockdown-active,
 body.fl-lockdown-active {
@@ -17,19 +17,18 @@ body.fl-lockdown-active {
 }
 
 .fl-lockdown {
-  --fl-red: #c01820;
-  --fl-red-dim: rgba(192, 24, 32, 0.55);
-  --fl-red-glow: rgba(220, 30, 38, 0.22);
-  --fl-terminal-bg: rgba(4, 2, 3, 0.82);
-  --fl-tape-red: #c41c22;
-  --fl-tape-black: #0a0608;
-  --fl-tape-stripe: 20px;
+  --fl-log-bg: rgba(6, 8, 7, 0.9);
+  --fl-log-border: rgba(90, 110, 88, 0.45);
+  --fl-log-accent: rgba(120, 168, 108, 0.85);
+  --fl-log-dim: rgba(140, 155, 138, 0.55);
+  --fl-log-alert: rgba(210, 120, 90, 0.95);
+  --fl-log-critical: #e05848;
   position: fixed;
   inset: 0;
   z-index: 10000;
   pointer-events: auto;
   font-family: "Share Tech Mono", "Courier New", monospace;
-  color: rgba(210, 198, 188, 0.92);
+  color: rgba(196, 204, 188, 0.92);
   isolation: isolate;
 }
 
@@ -48,8 +47,9 @@ body.fl-lockdown-active {
 .fl-blocker {
   position: absolute;
   inset: 0;
-  z-index: 90;
+  z-index: 40;
   cursor: not-allowed;
+  pointer-events: auto;
 }
 
 /* ─── Status bar ─── */
@@ -63,40 +63,40 @@ body.fl-lockdown-active {
   text-align: center;
   background: linear-gradient(
     180deg,
-    rgba(8, 2, 3, 0.88) 0%,
-    rgba(8, 2, 3, 0.55) 70%,
+    rgba(6, 8, 7, 0.92) 0%,
+    rgba(6, 8, 7, 0.5) 70%,
     transparent 100%
   );
-  border-bottom: 1px solid rgba(160, 20, 28, 0.35);
+  border-bottom: 1px solid rgba(90, 110, 88, 0.28);
 }
 
 .fl-status__primary {
   margin: 0;
   font-size: clamp(0.62rem, 2.4vw, 0.78rem);
-  letter-spacing: 0.22em;
-  color: rgba(220, 80, 78, 0.95);
+  letter-spacing: 0.18em;
+  color: var(--fl-log-accent);
   text-transform: uppercase;
 }
 
 .fl-status__indicator {
   display: inline-block;
   margin-right: 0.35em;
-  color: #e02830;
-  animation: fl-status-pulse 3.2s ease-in-out infinite;
+  color: rgba(140, 180, 120, 0.9);
+  animation: fl-status-pulse 4s ease-in-out infinite;
 }
 
 .fl-status__secondary {
   margin: 4px 0 0;
   font-size: clamp(0.55rem, 2vw, 0.68rem);
-  letter-spacing: 0.28em;
-  color: rgba(180, 70, 68, 0.72);
+  letter-spacing: 0.22em;
+  color: var(--fl-log-dim);
   text-transform: uppercase;
 }
 
 @keyframes fl-status-pulse {
   0%,
   100% {
-    opacity: 0.45;
+    opacity: 0.4;
   }
   50% {
     opacity: 1;
@@ -112,27 +112,26 @@ body.fl-lockdown-active {
 
 .fl-layer--dark {
   z-index: 1;
-  background: rgba(0, 0, 0, 0.62);
+  background: rgba(0, 0, 0, 0.52);
   opacity: 0;
   transition: opacity 0.55s ease 0.08s;
 }
 
-.fl-layer--emergency {
+.fl-layer--ambient {
   z-index: 2;
   background:
     radial-gradient(
-      ellipse 70% 50% at 50% 45%,
-      rgba(180, 20, 28, 0.14) 0%,
-      transparent 55%
+      ellipse 65% 45% at 50% 48%,
+      rgba(60, 80, 55, 0.1) 0%,
+      transparent 58%
     ),
     linear-gradient(
       180deg,
-      rgba(120, 10, 16, 0.18) 0%,
-      transparent 35%,
-      rgba(80, 8, 12, 0.12) 100%
+      rgba(8, 12, 8, 0.12) 0%,
+      transparent 40%,
+      rgba(4, 6, 4, 0.08) 100%
     );
   opacity: 0;
-  animation: fl-emergency-glow 7s ease-in-out infinite;
   transition: opacity 0.5s ease 0.1s;
 }
 
@@ -140,37 +139,19 @@ body.fl-lockdown-active {
   z-index: 3;
   background: radial-gradient(
     ellipse 88% 82% at 50% 48%,
-    transparent 32%,
-    rgba(40, 0, 4, 0.45) 68%,
-    rgba(20, 0, 2, 0.78) 100%
+    transparent 34%,
+    rgba(0, 0, 0, 0.38) 68%,
+    rgba(0, 0, 0, 0.68) 100%
   );
   opacity: 0;
   transition: opacity 0.55s ease 0.12s;
-}
-
-.fl-layer--fog {
-  z-index: 4;
-  background:
-    radial-gradient(
-      ellipse 90% 40% at 30% 60%,
-      rgba(100, 60, 60, 0.08) 0%,
-      transparent 70%
-    ),
-    radial-gradient(
-      ellipse 80% 35% at 72% 38%,
-      rgba(80, 40, 45, 0.07) 0%,
-      transparent 68%
-    );
-  filter: blur(12px);
-  opacity: 0;
-  transition: opacity 0.7s ease 0.15s;
 }
 
 .fl-layer--grain {
   z-index: 80;
   inset: -10%;
   opacity: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
   mix-blend-mode: overlay;
   animation: fl-grain-drift 0.55s steps(3) infinite;
   transition: opacity 0.4s ease 0.2s;
@@ -183,10 +164,10 @@ body.fl-lockdown-active {
     0deg,
     transparent,
     transparent 2px,
-    rgba(0, 0, 0, 0.28) 2px,
-    rgba(0, 0, 0, 0.28) 4px
+    rgba(0, 0, 0, 0.18) 2px,
+    rgba(0, 0, 0, 0.18) 4px
   );
-  animation: fl-scan-drift 12s linear infinite;
+  animation: fl-scan-drift 14s linear infinite;
   transition: opacity 0.4s ease 0.22s;
 }
 
@@ -197,19 +178,9 @@ body.fl-lockdown-active {
     0deg,
     transparent 0,
     transparent 3px,
-    rgba(255, 255, 255, 0.015) 3px,
-    rgba(255, 255, 255, 0.015) 4px
+    rgba(255, 255, 255, 0.012) 3px,
+    rgba(255, 255, 255, 0.012) 4px
   );
-}
-
-@keyframes fl-emergency-glow {
-  0%,
-  100% {
-    opacity: 0.72;
-  }
-  50% {
-    opacity: 1;
-  }
 }
 
 @keyframes fl-grain-drift {
@@ -226,11 +197,9 @@ body.fl-lockdown-active {
 
 /* ─── Boot / glitch / active phases ─── */
 .fl-lockdown--boot .fl-layer--dark,
-.fl-lockdown--boot .fl-layer--emergency,
+.fl-lockdown--boot .fl-layer--ambient,
 .fl-lockdown--boot .fl-layer--vignette,
-.fl-lockdown--boot .fl-layer--fog,
-.fl-lockdown--boot .fl-terminal,
-.fl-lockdown--boot .fl-tape,
+.fl-lockdown--boot .fl-log,
 .fl-lockdown--boot .fl-status {
   opacity: 0;
   visibility: hidden;
@@ -242,26 +211,22 @@ body.fl-lockdown-active {
 }
 
 .fl-lockdown--glitch .fl-layer--static {
-  opacity: 0.35;
+  opacity: 0.2;
   animation: fl-glitch-flash 0.14s steps(2) 2;
-}
-
-.fl-lockdown--glitch .fl-lockdown {
-  animation: fl-screen-shift 0.14s steps(2) 1;
 }
 
 @keyframes fl-glitch-flash {
   0% {
-    opacity: 0.05;
+    opacity: 0.02;
     transform: translateX(0);
   }
   33% {
-    opacity: 0.45;
-    transform: translateX(-3px);
+    opacity: 0.25;
+    transform: translateX(-2px);
   }
   66% {
-    opacity: 0.2;
-    transform: translateX(2px);
+    opacity: 0.1;
+    transform: translateX(1px);
   }
   100% {
     opacity: 0;
@@ -269,39 +234,25 @@ body.fl-lockdown-active {
   }
 }
 
-@keyframes fl-screen-shift {
-  0%,
-  100% {
-    filter: none;
-  }
-  50% {
-    filter: hue-rotate(-8deg) contrast(1.08);
-  }
-}
-
 .fl-lockdown--active .fl-layer--dark,
+.fl-lockdown--active .fl-layer--ambient,
 .fl-lockdown--active .fl-layer--vignette,
-.fl-lockdown--active .fl-layer--fog,
 .fl-lockdown--active .fl-layer--grain,
 .fl-lockdown--active .fl-layer--scanlines {
   opacity: 1;
 }
 
-.fl-lockdown--active .fl-layer--emergency {
-  opacity: 0.85;
-}
-
-.fl-lockdown--active .fl-terminal {
+.fl-lockdown--active .fl-log {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
 }
 
-.fl-lockdown--active .fl-tape {
+.fl-lockdown--active .fl-status {
   opacity: 1;
 }
 
 .fl-lockdown--active .fl-layer--static {
-  animation: fl-subtle-static 14s ease-in-out infinite;
+  animation: fl-subtle-static 16s ease-in-out infinite;
 }
 
 @keyframes fl-subtle-static {
@@ -312,56 +263,100 @@ body.fl-lockdown-active {
     transform: translateX(0);
   }
   95% {
-    opacity: 0.12;
-    transform: translateX(-2px);
-  }
-  96% {
-    opacity: 0.04;
-    transform: translateX(1px);
+    opacity: 0.08;
+    transform: translateX(-1px);
   }
   97% {
-    opacity: 0.08;
+    opacity: 0.04;
     transform: translateX(0);
   }
 }
 
 .fl-lockdown--glitch .fl-layer--dark,
-.fl-lockdown--glitch .fl-layer--emergency,
+.fl-lockdown--glitch .fl-layer--ambient,
 .fl-lockdown--glitch .fl-layer--vignette {
-  opacity: 0.55;
+  opacity: 0.45;
 }
 
-.fl-lockdown--glitch .fl-terminal {
-  opacity: 0.35;
-  transform: translate(-50%, -50%) scale(0.98);
+.fl-lockdown--glitch .fl-log {
+  opacity: 0.3;
+  transform: translate(-50%, -50%) scale(0.99);
 }
 
 .fl-lockdown--glitch .fl-status {
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
-/* ─── Terminal panel ─── */
-.fl-terminal {
+/* ─── Access log panel ─── */
+.fl-log {
   position: absolute;
   top: 50%;
   left: 50%;
   z-index: 50;
-  width: min(92vw, 520px);
-  padding: clamp(18px, 4vw, 28px) clamp(16px, 4vw, 26px);
-  background: var(--fl-terminal-bg);
-  border: 1px solid rgba(160, 28, 32, 0.62);
+  width: min(94vw, 580px);
+  background: var(--fl-log-bg);
+  border: 1px solid var(--fl-log-border);
   box-shadow:
-    0 0 24px rgba(160, 20, 28, 0.18),
-    inset 0 0 40px rgba(0, 0, 0, 0.45);
+    0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 12px 40px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(140, 160, 130, 0.06);
   opacity: 0;
-  transform: translate(-50%, -48%) scale(0.97);
+  transform: translate(-50%, -48%) scale(0.98);
   transition:
     opacity 0.35s ease 0.05s,
     transform 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.05s;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(3px);
+  pointer-events: auto;
 }
 
-.fl-terminal::before {
+.fl-log__chrome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(90, 110, 88, 0.22);
+}
+
+.fl-log__chrome-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  opacity: 0.55;
+}
+
+.fl-log__chrome-dot--a {
+  background: #6a5858;
+}
+
+.fl-log__chrome-dot--b {
+  background: #6a6450;
+}
+
+.fl-log__chrome-dot--c {
+  background: #506048;
+}
+
+.fl-log__chrome-title {
+  flex: 1;
+  margin-left: 4px;
+  font-size: clamp(0.58rem, 2.1vw, 0.68rem);
+  letter-spacing: 0.08em;
+  color: rgba(160, 175, 150, 0.72);
+}
+
+.fl-log__chrome-meta {
+  font-size: clamp(0.52rem, 1.9vw, 0.62rem);
+  letter-spacing: 0.14em;
+  color: rgba(120, 150, 105, 0.65);
+}
+
+.fl-log__body {
+  position: relative;
+  padding: clamp(16px, 3.5vw, 24px) clamp(14px, 3.5vw, 22px);
+}
+
+.fl-log__body::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -369,341 +364,288 @@ body.fl-lockdown-active {
     0deg,
     transparent,
     transparent 3px,
-    rgba(0, 0, 0, 0.12) 3px,
-    rgba(0, 0, 0, 0.12) 4px
+    rgba(0, 0, 0, 0.08) 3px,
+    rgba(0, 0, 0, 0.08) 4px
   );
   pointer-events: none;
-  opacity: 0.55;
+  opacity: 0.45;
 }
 
-.fl-terminal::after {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border: 1px solid rgba(220, 40, 44, 0.08);
-  pointer-events: none;
-  animation: fl-terminal-flicker 8s ease-in-out infinite;
+.fl-log__file-header {
+  position: relative;
+  margin: 0 0 8px;
+  font-size: clamp(0.68rem, 2.5vw, 0.8rem);
+  letter-spacing: 0.1em;
+  color: rgba(170, 185, 160, 0.78);
 }
 
-@keyframes fl-terminal-flicker {
+.fl-log__file-meta {
+  position: relative;
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(90, 110, 88, 0.2);
+  font-size: clamp(0.58rem, 2.1vw, 0.68rem);
+  letter-spacing: 0.06em;
+  color: rgba(130, 145, 125, 0.62);
+}
+
+.fl-log__stream {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  min-height: clamp(10rem, 38vh, 14rem);
+}
+
+.fl-log__line--typing {
+  color: rgba(200, 208, 188, 0.88);
+}
+
+.fl-log__cursor {
+  display: inline-block;
+  margin-left: 1px;
+  color: rgba(130, 170, 115, 0.95);
+  animation: fl-cursor-blink 0.9s step-end infinite;
+}
+
+.fl-log__prompt {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(90, 110, 88, 0.22);
+  font-size: clamp(0.6rem, 2.2vw, 0.72rem);
+  letter-spacing: 0.05em;
+  color: rgba(130, 145, 125, 0.58);
+}
+
+.fl-log__prompt-text {
+  color: rgba(130, 145, 125, 0.58);
+}
+
+@keyframes fl-cursor-blink {
   0%,
-  92%,
   100% {
-    opacity: 0.4;
+    opacity: 1;
   }
-  93% {
-    opacity: 0.15;
-  }
-  94% {
-    opacity: 0.55;
+  50% {
+    opacity: 0;
   }
 }
 
-.fl-terminal__header {
+.fl-log__entries {
   position: relative;
-  margin: 0 0 14px;
-  font-size: clamp(0.68rem, 2.6vw, 0.82rem);
-  letter-spacing: 0.12em;
-  color: rgba(190, 170, 155, 0.78);
+  display: grid;
+  gap: 6px;
 }
 
-.fl-terminal__alert {
-  position: relative;
-  margin: 0 0 18px;
-  font-size: clamp(0.82rem, 3.4vw, 1.05rem);
-  letter-spacing: 0.14em;
-  font-weight: 700;
-  color: rgba(235, 90, 82, 0.98);
-  text-shadow: 0 0 18px rgba(200, 30, 28, 0.35);
-}
-
-.fl-terminal__record {
-  position: relative;
+.fl-log__line {
   margin: 0;
-  display: grid;
-  gap: 7px;
+  font-size: clamp(0.64rem, 2.4vw, 0.76rem);
+  letter-spacing: 0.04em;
+  line-height: 1.45;
 }
 
-.fl-terminal__row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 8px;
-  font-size: clamp(0.66rem, 2.5vw, 0.78rem);
+.fl-log__time {
+  color: rgba(110, 130, 105, 0.72);
+}
+
+.fl-log__label {
+  color: rgba(150, 165, 140, 0.68);
+}
+
+.fl-log__value {
+  color: rgba(200, 208, 188, 0.92);
+}
+
+.fl-log__value--alert {
+  color: var(--fl-log-alert);
+  font-weight: 700;
   letter-spacing: 0.08em;
 }
 
-.fl-terminal__row dt {
-  margin: 0;
-  color: rgba(150, 135, 125, 0.72);
+.fl-log__value--professor {
+  color: rgba(200, 130, 110, 0.92);
 }
 
-.fl-terminal__row dd {
-  margin: 0;
-  color: rgba(210, 198, 188, 0.9);
+.fl-log__value--critical {
+  color: var(--fl-log-critical);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 8px rgba(200, 70, 55, 0.2);
 }
 
-.fl-terminal__professor {
-  color: rgba(220, 70, 68, 0.92);
-  text-shadow: 0 0 10px rgba(180, 30, 28, 0.25);
+.fl-log__line--denied {
+  animation: fl-denial-flash 0.35s ease;
 }
 
-.fl-terminal__row--critical dd {
-  font-size: clamp(0.72rem, 2.8vw, 0.86rem);
+.fl-log__value--denied {
+  color: rgba(210, 100, 85, 0.92);
+  letter-spacing: 0.06em;
 }
 
-.fl-terminal__no-record {
-  display: inline-block;
-  color: #f03838;
-  letter-spacing: 0.16em;
-  text-shadow:
-    0 0 12px rgba(240, 40, 40, 0.45),
-    0 0 24px rgba(180, 20, 24, 0.25);
-  animation: fl-no-record-pulse 4.5s ease-in-out infinite;
-}
-
-@keyframes fl-no-record-pulse {
-  0%,
-  100% {
-    opacity: 0.88;
+@keyframes fl-denial-flash {
+  from {
+    opacity: 0.2;
   }
-  50% {
+  to {
     opacity: 1;
   }
 }
 
-.fl-terminal__corrupt {
+.fl-passcode {
   position: relative;
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px dashed rgba(120, 30, 32, 0.35);
+  z-index: 2;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(90, 110, 88, 0.22);
 }
 
-.fl-terminal__corrupt-line {
-  margin: 0;
-  font-size: clamp(0.62rem, 2.3vw, 0.74rem);
+.fl-passcode__label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: clamp(0.58rem, 2.1vw, 0.68rem);
+  letter-spacing: 0.14em;
+  color: rgba(150, 165, 140, 0.72);
+  text-transform: uppercase;
+}
+
+.fl-passcode__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fl-passcode__prompt {
+  flex-shrink: 0;
+  color: rgba(120, 150, 105, 0.75);
+  font-size: clamp(0.7rem, 2.5vw, 0.82rem);
+}
+
+.fl-passcode__input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: clamp(0.68rem, 2.4vw, 0.78rem);
+  letter-spacing: 0.18em;
+  color: rgba(200, 208, 188, 0.95);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(90, 110, 88, 0.35);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fl-passcode__input::placeholder {
+  color: rgba(130, 145, 125, 0.4);
+  letter-spacing: 0.12em;
+}
+
+.fl-passcode__input:focus {
+  border-color: rgba(120, 150, 105, 0.55);
+  box-shadow: 0 0 0 1px rgba(120, 150, 105, 0.15);
+}
+
+.fl-passcode__submit {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: clamp(0.58rem, 2.1vw, 0.68rem);
+  letter-spacing: 0.12em;
+  color: rgba(190, 200, 180, 0.88);
+  text-transform: uppercase;
+  background: rgba(40, 50, 38, 0.85);
+  border: 1px solid rgba(90, 110, 88, 0.4);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.fl-passcode__submit:hover {
+  background: rgba(50, 62, 46, 0.95);
+  border-color: rgba(110, 130, 100, 0.5);
+}
+
+.fl-passcode__submit:active {
+  background: rgba(30, 38, 28, 0.95);
+}
+
+.fl-passcode__hint {
+  margin: 8px 0 0;
+  font-size: clamp(0.52rem, 1.9vw, 0.62rem);
   letter-spacing: 0.06em;
-  color: rgba(170, 60, 58, 0.82);
-  text-shadow: 0 0 6px rgba(140, 20, 24, 0.2);
-  animation: fl-corrupt-flicker 6s ease-in-out infinite;
+  color: rgba(130, 145, 125, 0.52);
 }
 
-.fl-terminal__corrupt-line--fade {
+.fl-log__corrupt {
+  position: relative;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(90, 110, 88, 0.25);
+}
+
+.fl-log__corrupt-line {
+  margin: 0;
+  font-size: clamp(0.6rem, 2.2vw, 0.72rem);
+  letter-spacing: 0.05em;
+  color: rgba(150, 130, 110, 0.72);
+}
+
+.fl-log__corrupt-line--separator {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(90, 110, 88, 0.25);
+}
+
+.fl-log__corrupt-line--fade {
   margin-top: 6px;
-  opacity: 0.55;
-  animation-delay: -2.4s;
+  opacity: 0.5;
+}
+
+.fl-log__corrupt-line--done {
+  animation: fl-corrupt-flicker 7s ease-in-out infinite;
 }
 
 @keyframes fl-corrupt-flicker {
   0%,
-  88%,
+  90%,
   100% {
-    opacity: 0.75;
-    transform: translateX(0);
-  }
-  90% {
-    opacity: 0.35;
-    transform: translateX(1px);
+    opacity: 0.7;
   }
   92% {
-    opacity: 0.9;
-    transform: translateX(-1px);
+    opacity: 0.35;
   }
-}
-
-/* ─── Warning tape (danger stripe pattern) ─── */
-.fl-tape {
-  position: absolute;
-  z-index: 70;
-  left: 50%;
-  width: 145%;
-  height: clamp(38px, 6.2vh, 54px);
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  opacity: 0;
-  transition: opacity 0.45s ease 0.18s;
-  background-color: var(--fl-tape-red);
-  background-image:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.1) 0%,
-      transparent 22%,
-      transparent 78%,
-      rgba(0, 0, 0, 0.28) 100%
-    ),
-    repeating-linear-gradient(
-      -48deg,
-      var(--fl-tape-red) 0,
-      var(--fl-tape-red) var(--fl-tape-stripe),
-      var(--fl-tape-black) var(--fl-tape-stripe),
-      var(--fl-tape-black) calc(var(--fl-tape-stripe) * 2)
-    );
-  box-shadow:
-    0 5px 16px rgba(0, 0, 0, 0.5),
-    0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.35);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  border-bottom: 2px solid rgba(0, 0, 0, 0.45);
-  transform-origin: center center;
-  pointer-events: none;
-  filter: saturate(0.92) contrast(1.05);
-}
-
-.fl-tape::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      transparent 0,
-      transparent 3px,
-      rgba(0, 0, 0, 0.04) 3px,
-      rgba(0, 0, 0, 0.04) 4px
-    ),
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
-  mix-blend-mode: multiply;
-  pointer-events: none;
-  opacity: 0.65;
-}
-
-.fl-tape::after {
-  content: "";
-  position: absolute;
-  inset: -1px 0;
-  background: linear-gradient(
-    90deg,
-    rgba(0, 0, 0, 0.35) 0%,
-    transparent 4%,
-    transparent 96%,
-    rgba(0, 0, 0, 0.35) 100%
-  );
-  pointer-events: none;
-}
-
-.fl-tape__track {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  width: max-content;
-  flex-shrink: 0;
-  animation: fl-tape-scroll 36s linear infinite;
-  will-change: transform;
-}
-
-.fl-tape__run {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-}
-
-.fl-tape__segment {
-  flex-shrink: 0;
-  padding-right: 2.5rem;
-  white-space: nowrap;
-  font-size: clamp(0.6rem, 2.3vw, 0.76rem);
-  font-weight: 800;
-  letter-spacing: 0.2em;
-  color: #f2ece4;
-  text-transform: uppercase;
-  text-shadow:
-    0 0 1px rgba(0, 0, 0, 0.9),
-    0 1px 0 rgba(0, 0, 0, 0.85),
-    0 2px 4px rgba(0, 0, 0, 0.55);
-}
-
-.fl-tape--a .fl-tape__track {
-  animation-duration: 32s;
-}
-
-.fl-tape--b .fl-tape__track {
-  animation-duration: 40s;
-  animation-direction: reverse;
-}
-
-.fl-tape--c .fl-tape__track {
-  animation-duration: 36s;
-}
-
-.fl-tape--d .fl-tape__track {
-  animation-duration: 44s;
-  animation-direction: reverse;
-}
-
-.fl-tape--a {
-  top: 18%;
-  transform: translateX(-50%) rotate(-11deg);
-}
-
-.fl-tape--b {
-  top: 72%;
-  transform: translateX(-48%) rotate(7deg);
-  z-index: 55;
-}
-
-.fl-tape--c {
-  top: 84%;
-  transform: translateX(-52%) rotate(-5deg);
-  height: clamp(30px, 4.8vh, 42px);
-  opacity: 0.92;
-}
-
-.fl-tape--d {
-  top: 8%;
-  transform: translateX(-50%) rotate(4deg);
-  height: clamp(28px, 4.5vh, 40px);
-  width: 130%;
-}
-
-@keyframes fl-tape-scroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
+  94% {
+    opacity: 0.85;
   }
 }
 
 /* ─── Mobile layout ─── */
 @media (max-width: 640px) {
-  .fl-terminal {
-    width: min(94vw, 520px);
-    top: 50%;
+  .fl-log {
+    width: min(94vw, 580px);
   }
 
-  .fl-terminal__row {
-    grid-template-columns: 1fr;
+  .fl-passcode__row {
+    flex-wrap: wrap;
+  }
+
+  .fl-passcode__input {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .fl-passcode__submit {
+    width: 100%;
+  }
+
+  .fl-log__file-meta {
+    line-height: 1.5;
+  }
+
+  .fl-log__line {
+    display: grid;
     gap: 2px;
   }
 
-  .fl-terminal__row dd {
-    padding-left: 0;
-    margin-bottom: 4px;
-  }
-
-  .fl-tape--a {
-    top: 10%;
-    transform: translateX(-50%) rotate(-8deg);
-    width: 160%;
-  }
-
-  .fl-tape--b {
-    top: 78%;
-    transform: translateX(-50%) rotate(5deg);
-    width: 155%;
-  }
-
-  .fl-tape--c {
-    top: 90%;
-    transform: translateX(-50%) rotate(-3deg);
-    width: 150%;
-  }
-
-  .fl-tape--d {
-    top: 4%;
-    transform: translateX(-50%) rotate(3deg);
-    width: 140%;
+  .fl-log__time {
+    display: block;
   }
 
   .fl-status {
@@ -712,54 +654,41 @@ body.fl-lockdown-active {
 }
 
 @media (max-width: 380px) {
-  .fl-terminal {
-    width: 92vw;
-    padding: 16px 14px;
+  .fl-log__body {
+    padding: 14px 12px;
   }
 
-  .fl-terminal__alert {
-    letter-spacing: 0.1em;
+  .fl-log__value--alert {
+    letter-spacing: 0.05em;
   }
 }
 
 /* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
   .fl-status__indicator,
-  .fl-layer--emergency,
   .fl-layer--grain,
   .fl-layer--scanlines,
-  .fl-terminal__no-record,
-  .fl-terminal__corrupt-line,
-  .fl-terminal::after,
-  .fl-lockdown--active .fl-layer--static {
+  .fl-log__corrupt-line--done,
+  .fl-log__cursor {
     animation: none !important;
   }
 
-  .fl-tape__track {
-    animation-duration: 52s !important;
-    animation-direction: normal !important;
-  }
-
   .fl-lockdown--boot .fl-layer--dark,
-  .fl-lockdown--boot .fl-layer--emergency,
+  .fl-lockdown--boot .fl-layer--ambient,
   .fl-lockdown--boot .fl-layer--vignette,
-  .fl-lockdown--boot .fl-layer--fog,
-  .fl-lockdown--boot .fl-terminal,
-  .fl-lockdown--boot .fl-tape,
+  .fl-lockdown--boot .fl-log,
   .fl-lockdown--boot .fl-status,
   .fl-lockdown--active .fl-layer--dark,
-  .fl-lockdown--active .fl-layer--emergency,
+  .fl-lockdown--active .fl-layer--ambient,
   .fl-lockdown--active .fl-layer--vignette,
-  .fl-lockdown--active .fl-layer--fog,
   .fl-lockdown--active .fl-layer--grain,
   .fl-lockdown--active .fl-layer--scanlines,
-  .fl-lockdown--active .fl-terminal,
-  .fl-lockdown--active .fl-tape,
+  .fl-lockdown--active .fl-log,
   .fl-lockdown--active .fl-status {
     transition: none;
   }
 
-  .fl-lockdown--active .fl-terminal {
+  .fl-lockdown--active .fl-log {
     transform: translate(-50%, -50%);
   }
 }
