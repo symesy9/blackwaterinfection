@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build && cp dist/index.vite.html dist/index.html && cp dist/index.html dist/404.html",
     "publish": "npm run build && node scripts/publish-static.mjs",
+    "deploy:site": "node scripts/deploy-site.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
