@@ -682,6 +682,8 @@ export default function FacilityLockdownOverlay() {
                 className="fl-secret-doc__image"
                 src={SECRET_DOCUMENT_IMAGE}
                 alt="Recovered Blackwater Labs facility code symbols painted on a tunnel wall"
+                width={1024}
+                height={682}
                 draggable
               />
               <div className="fl-secret-doc__scanlines" aria-hidden="true" />
@@ -696,7 +698,7 @@ export default function FacilityLockdownOverlay() {
                 <a
                   className="fl-secret-doc__download"
                   href={SECRET_DOCUMENT_IMAGE}
-                  download="blackwater-facility-code.jpg"
+                  download="ATTACHMENT_C7-2789.rec"
                 >
                   DOWNLOAD
                 </a>
