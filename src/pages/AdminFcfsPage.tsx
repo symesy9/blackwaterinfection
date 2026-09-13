@@ -33,6 +33,43 @@ import { shortenWalletAddress } from "../features/whitelist/lib/wallet";
 
 const PAGE_SIZE = 25;
 
+function CopyWalletIconButton({
+  copied,
+  onCopy,
+}: {
+  copied: boolean;
+  onCopy: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`wl-admin__copy-btn${copied ? " is-copied" : ""}`}
+      aria-label={copied ? "Wallet address copied" : "Copy wallet address"}
+      title={copied ? "Copied" : "Copy wallet address"}
+      onClick={(event) => {
+        event.stopPropagation();
+        onCopy();
+      }}
+    >
+      {copied ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"
+          />
+        </svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+          />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 export default function AdminFcfsPage() {
   const [applications, setApplications] = useState<FcfsApplication[]>([]);
   const [total, setTotal] = useState(0);
@@ -304,7 +341,15 @@ export default function AdminFcfsPage() {
                         </span>
                       ) : null}
                     </td>
-                    <td>{shortenWalletAddress(application.wallet_address)}</td>
+                    <td>
+                      <span className="wl-admin__wallet-cell">
+                        <code>{shortenWalletAddress(application.wallet_address)}</code>
+                        <CopyWalletIconButton
+                          copied={copiedId === application.id}
+                          onCopy={() => void handleCopy(application)}
+                        />
+                      </span>
+                    </td>
                     <td>
                       {verificationStatus(
                         application.follow_opened_at,
@@ -424,9 +469,15 @@ export default function AdminFcfsPage() {
               onChange={(event) => setEditHandle(event.target.value)}
             />
 
-            <label className="wl-admin__field-label" htmlFor="fcfs-edit-wallet">
-              Wallet address
-            </label>
+            <div className="wl-admin__field-label-row">
+              <label className="wl-admin__field-label" htmlFor="fcfs-edit-wallet">
+                Wallet address
+              </label>
+              <CopyWalletIconButton
+                copied={copiedId === detail.id}
+                onCopy={() => void handleCopy(detail)}
+              />
+            </div>
             <input
               id="fcfs-edit-wallet"
               className="wl-admin__field-input"
@@ -435,13 +486,6 @@ export default function AdminFcfsPage() {
             />
 
             <div className="wl-admin__modal-actions wl-admin__modal-actions--left">
-              <button
-                type="button"
-                className="wl-admin__btn wl-admin__btn--ghost"
-                onClick={() => void handleCopy(detail)}
-              >
-                {copiedId === detail.id ? "Copied" : "Copy Wallet"}
-              </button>
               <button
                 type="button"
                 className="wl-admin__btn wl-admin__btn--ghost"

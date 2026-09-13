@@ -17,6 +17,15 @@ export default function AdminLoginPage() {
     document.title = "Admin Login — Blackwater Labs";
   }, []);
 
+  useEffect(() => {
+    document.documentElement.classList.add("rz2-page-scroll");
+    document.body.classList.add("rz2-page-scroll");
+    return () => {
+      document.documentElement.classList.remove("rz2-page-scroll");
+      document.body.classList.remove("rz2-page-scroll");
+    };
+  }, []);
+
   if (!configured) {
     return (
       <div className="wl-admin wl-admin--center">

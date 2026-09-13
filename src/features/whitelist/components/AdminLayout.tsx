@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAdminAuth } from "../hooks/useAdminAuth";
 
@@ -12,6 +13,15 @@ const NAV = [
 
 export default function AdminLayout() {
   const { user, signOut } = useAdminAuth();
+
+  useEffect(() => {
+    document.documentElement.classList.add("rz2-page-scroll");
+    document.body.classList.add("rz2-page-scroll");
+    return () => {
+      document.documentElement.classList.remove("rz2-page-scroll");
+      document.body.classList.remove("rz2-page-scroll");
+    };
+  }, []);
 
   return (
     <div className="wl-admin">
