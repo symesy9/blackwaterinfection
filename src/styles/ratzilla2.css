@@ -716,6 +716,16 @@ body {
   border-color: rgba(240, 190, 80, 0.8);
 }
 
+.bw-landing-actions__btn--fcfs {
+  border-color: rgba(200, 144, 32, 0.55);
+  color: rgba(240, 210, 160, 0.96);
+}
+
+.bw-landing-actions__btn--fcfs:hover,
+.bw-landing-actions__btn--fcfs:focus-visible {
+  border-color: rgba(240, 190, 80, 0.8);
+}
+
 .bw-landing-actions__btn--wl {
   border-color: rgba(58, 128, 80, 0.55);
   color: rgba(180, 230, 195, 0.96);

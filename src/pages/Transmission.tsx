@@ -87,6 +87,9 @@ export default function Transmission() {
                 ▶ PLAY CONTAINMENT PROTOCOL
               </Link>
             ) : null}
+            <Link to="/fcfs" className="bw-landing-actions__btn bw-landing-actions__btn--fcfs">
+              ◆ FCFS CLEARANCE
+            </Link>
             <Link to="/whitelist" className="bw-landing-actions__btn bw-landing-actions__btn--wl">
               ✓ CHECK YOUR WHITELIST
             </Link>
