@@ -22,8 +22,13 @@ export default defineConfig(({ command }) => ({
       configureServer(server: ViteDevServer) {
         server.middlewares.use(
           (req: Connect.IncomingMessage, _res: ServerResponse, next: Connect.NextFunction) => {
-          const path = req.url?.split("?")[0];
-          if (path === "/" || path === "/index.html") {
+          const path = req.url?.split("?")[0] ?? "";
+          const isDevModule =
+            path.startsWith("/@") ||
+            path.startsWith("/node_modules/") ||
+            path.startsWith("/src/");
+          const isStaticFile = path.includes(".") && !path.endsWith(".html");
+          if (!isDevModule && !isStaticFile) {
             req.url = "/index.vite.html";
           }
           next();
