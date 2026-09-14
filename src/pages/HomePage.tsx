@@ -154,15 +154,6 @@ export default function HomePage() {
             </div>
           </aside>
         </section>
-
-        <section className="bw-home__lower" aria-label="Additional navigation">
-          <div className="bw-home__lower-links">
-            <Link to="/whitelist">Check Whitelist</Link>
-            <Link to="/fcfs">FCFS Clearance</Link>
-            <Link to="/infection">Infection Station</Link>
-          </div>
-          <p className="bw-home__credit">Powered by Little Ollie Labs for BlackWater Labs</p>
-        </section>
       </main>
 
       <svg className="bw-home__svg-filters" aria-hidden="true" focusable="false">
