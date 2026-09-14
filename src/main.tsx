@@ -6,6 +6,8 @@ import "./styles/infection.css";
 import "./styles/containment.css";
 import "./styles/whitelist.css";
 import "./styles/fcfs.css";
+import "./styles/homepage.css";
+import "./styles/site.css";
 import "./styles/facility-lockdown.css";
 
 createRoot(document.getElementById("root")!).render(

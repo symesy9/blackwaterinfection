@@ -7,9 +7,9 @@ import {
   type ChangeEvent,
   type DragEvent,
 } from "react";
-import { Link } from "react-router-dom";
-import RzAmbientStage from "../components/RzAmbientStage";
+import HomeNav from "../components/home/HomeNav";
 import OutbreakStatus from "../components/OutbreakStatus";
+import { HOME_ASSETS } from "../lib/homeAssets";
 import {
   getDefaultOverlay,
   getOverlayUrl,
@@ -86,6 +86,17 @@ export default function InfectionStation() {
     if (!img) return;
     const width = img.getBoundingClientRect().width;
     if (width > 0) setPreviewStackWidth(Math.round(width));
+  }, []);
+
+  useEffect(() => {
+    document.title = "Infect Me — Blackwater Labs";
+    document.documentElement.classList.add("rz2-page-scroll");
+    document.body.classList.add("rz2-page-scroll", "bw-infection-active");
+
+    return () => {
+      document.documentElement.classList.remove("rz2-page-scroll");
+      document.body.classList.remove("rz2-page-scroll", "bw-infection-active");
+    };
   }, []);
 
   useEffect(() => {
@@ -288,21 +299,48 @@ export default function InfectionStation() {
   }, [phase]);
 
   return (
-    <RzAmbientStage className={stageClass}>
-      <Link to="/" className="rz-infection__sewer-btn">
-        ← BACK TO SEWER
-      </Link>
+    <div className={`bw-infection ${stageClass}`}>
+      <HomeNav />
 
-      <OutbreakStatus className="rz-outbreak--dock" />
+      <main className="bw-infection__shell">
+        <div className="bw-infection__fx" aria-hidden="true">
+          <img
+            className="bw-infection__atmosphere"
+            src={HOME_ASSETS.atmosphere}
+            alt=""
+            width={1672}
+            height={941}
+            decoding="async"
+          />
+          <img
+            className="bw-infection__lab"
+            src={HOME_ASSETS.labOverlay}
+            alt=""
+            width={1536}
+            height={1024}
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="bw-infection__grain" />
+          <div className="bw-infection__vignette" />
+        </div>
 
-      <div className={`rz-infection__shell ${phase === "warning" || phase === "progress" ? "is-shaking" : ""}`}>
-        <header className="rz-infection__header">
-          <h1 className="rz-infection__title">INFECTION STATION</h1>
-          <p className="rz-infection__subtitle">
-            Upload your NFT and allow the infection to spread.
-          </p>
-          <p className="rz-infection__tagline">Once infected, there is no cure.</p>
-        </header>
+        <section className="infection-page">
+          <header className="infection-page__header">
+            <p className="infection-page__eyebrow">Blackwater Labs</p>
+            <h1 className="infection-page__title">
+              INFECT ME<span className="infection-page__title-accent"> ☣</span>
+            </h1>
+            <p className="infection-page__lead">
+              Upload your NFT and allow the infection to spread. Once infected, there is no cure.
+            </p>
+          </header>
+
+          <OutbreakStatus className="infection-page__outbreak" />
+
+          <div
+            className={`rz-infection__shell ${phase === "warning" || phase === "progress" ? "is-shaking" : ""}`}
+          >
 
         {phase === "warning" && (
           <div className="rz-infection__warning-banner" role="alert">
@@ -426,7 +464,7 @@ export default function InfectionStation() {
                   void runInfectionSequence();
                 }}
               >
-                ☣️ INFECT ME ☣️
+                Infect Me →
               </button>
             )}
 
@@ -474,17 +512,19 @@ export default function InfectionStation() {
           </div>
         )}
 
-        <footer className="rz-infection__footer">
-          <p className="rz-infection__powered">
-            Powered by Little Ollie Labs for BlackWater Labs
-          </p>
-        </footer>
+            <footer className="rz-infection__footer">
+              <p className="rz-infection__powered">
+                Powered by Little Ollie Labs for BlackWater Labs
+              </p>
+            </footer>
+          </div>
+        </section>
+      </main>
 
-        <div className="rz-infection__alarm-flash" aria-hidden="true" />
-        <div className="rz-infection__burst" aria-hidden="true" />
-        <div className="rz-infection__flash-white" aria-hidden="true" />
-        <div className="rz-infection__glitch-lines" aria-hidden="true" />
-      </div>
+      <div className="rz-infection__alarm-flash" aria-hidden="true" />
+      <div className="rz-infection__burst" aria-hidden="true" />
+      <div className="rz-infection__flash-white" aria-hidden="true" />
+      <div className="rz-infection__glitch-lines" aria-hidden="true" />
 
       {shareModalOpen && phase === "complete" && (
         <div
@@ -565,6 +605,6 @@ export default function InfectionStation() {
           </div>
         </div>
       )}
-    </RzAmbientStage>
+    </div>
   );
 }

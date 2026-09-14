@@ -3,12 +3,17 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-route
 import FacilityLockdownOverlay from "./components/FacilityLockdownOverlay";
 import ContainmentProtocol from "./pages/ContainmentProtocol";
 import InfectionStation from "./pages/InfectionStation";
+import HomePage from "./pages/HomePage";
 import Transmission from "./pages/Transmission";
 import WhitelistCheckerPage from "./pages/WhitelistCheckerPage";
 import FcfsPage from "./pages/FcfsPage";
+import RoadmapPage from "./pages/RoadmapPage";
+import LogsPage from "./pages/LogsPage";
+import TeamPage from "./pages/TeamPage";
+import FaqsPage from "./pages/FaqsPage";
 import AdminRouteGuard from "./features/whitelist/components/AdminRouteGuard";
 import AdminLayout from "./features/whitelist/components/AdminLayout";
-import { CONTAINMENT_GAME_PUBLIC, FACILITY_LOCKDOWN } from "./lib/features";
+import { CONTAINMENT_GAME_PUBLIC, FACILITY_LOCKDOWN, USE_NEW_HOMEPAGE } from "./lib/features";
 
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage"));
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
@@ -45,7 +50,8 @@ export default function App() {
     <BrowserRouter basename={basename}>
       <PublicFacilityLockdown />
       <Routes>
-        <Route path="/" element={<Transmission />} />
+        <Route path="/" element={USE_NEW_HOMEPAGE ? <HomePage /> : <Transmission />} />
+        <Route path="/legacy-home" element={<Transmission />} />
         <Route path="/infection" element={<InfectionStation />} />
         <Route
           path="/containment"
@@ -53,6 +59,11 @@ export default function App() {
         />
         <Route path="/whitelist" element={<WhitelistCheckerPage />} />
         <Route path="/fcfs" element={<FcfsPage />} />
+        <Route path="/roadmap" element={<RoadmapPage />} />
+        <Route path="/logs" element={<LogsPage />} />
+        <Route path="/logs/:slug" element={<Navigate to="/logs" replace />} />
+        <Route path="/team" element={<TeamPage />} />
+        <Route path="/faqs" element={<FaqsPage />} />
         <Route
           path="/admin/login"
           element={

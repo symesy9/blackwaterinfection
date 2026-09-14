@@ -151,14 +151,14 @@ export default function FcfsApplicationForm() {
             <h2 className="fcfs-form__step-title">Share / Repost</h2>
           </div>
           <p className="fcfs-form__step-copy">
-            Open the pinned post, share or repost it, then confirm below.
+            Open the official post, share or repost it, then confirm below.
           </p>
           <button
             type="button"
             className="fcfs-form__link-btn"
             onClick={openShareLink}
           >
-            Open Pinned Post on X
+            Open Post on X
           </button>
           <label className="fcfs-form__check">
             <input
@@ -171,7 +171,7 @@ export default function FcfsApplicationForm() {
                 )
               }
             />
-            <span>I have shared/reposted the pinned post</span>
+            <span>I have shared/reposted the official post</span>
           </label>
         </li>
 
@@ -253,7 +253,7 @@ export default function FcfsApplicationForm() {
         className="fcfs-form__apply"
         disabled={!canApply}
       >
-        {submitting ? "Submitting…" : "Apply for FCFS Clearance"}
+        {submitting ? "Submitting…" : "Apply for FCFS →"}
       </button>
     </form>
   );

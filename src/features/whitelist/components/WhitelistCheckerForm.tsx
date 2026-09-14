@@ -6,7 +6,6 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
-import { Link } from "react-router-dom";
 import { checkWalletPublic, confirmWalletPublic } from "../lib/publicApi";
 import type { PublicLookupFound } from "../lib/types";
 import { shortenWalletAddress, validateWalletInput } from "../lib/wallet";
@@ -180,7 +179,7 @@ export default function WhitelistCheckerForm() {
             className="wl-checker__btn wl-checker__btn--primary"
             disabled={phase === "loading" || phase === "confirming" || !address.trim()}
           >
-            {phase === "loading" ? "Checking…" : "Check Whitelist"}
+            {phase === "loading" ? "Checking…" : "Check Whitelist →"}
           </button>
 
           {showConfirmButton && (
@@ -235,9 +234,6 @@ export default function WhitelistCheckerForm() {
         It does not cryptographically verify wallet ownership.
       </p>
 
-      <p className="wl-checker__back">
-        <Link to="/">← Return to Blackwater Labs</Link>
-      </p>
     </div>
   );
 }
