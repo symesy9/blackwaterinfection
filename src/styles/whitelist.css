@@ -612,10 +612,14 @@ body.wl-admin-active {
 .wl-admin__logo-wrap {
   display: inline-grid;
   place-items: center;
+  box-sizing: border-box;
   width: 2rem;
   height: 2rem;
   flex-shrink: 0;
+  padding: 0;
   border-radius: 50%;
+  border: 1px solid rgba(201, 162, 39, 0.28);
+  background: rgba(0, 0, 0, 0.55);
   overflow: hidden;
 }
 
@@ -625,11 +629,38 @@ body.wl-admin-active {
   margin-bottom: 0.15rem;
 }
 
+.wl-admin__logo-wrap--drawer {
+  width: 2.35rem;
+  height: 2.35rem;
+  flex-shrink: 0;
+}
+
+.wl-admin__logo-wrap--login {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 1rem;
+}
+
 .wl-admin__logo {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center center;
+  margin: 0;
+  background: transparent;
+}
+
+.wl-admin__drawer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1.15rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.14);
+  color: var(--wl-text);
+  text-decoration: none;
 }
 
 .wl-admin__brand-text {
@@ -1223,23 +1254,6 @@ body.wl-admin-menu-open {
   background: rgba(8, 6, 7, 0.82);
   border: 1px solid var(--wl-border);
   backdrop-filter: blur(10px);
-}
-
-.wl-admin__login-logo-wrap {
-  display: grid;
-  place-items: center;
-  width: 3rem;
-  height: 3rem;
-  margin: 0 auto 1rem;
-  border-radius: 50%;
-  overflow: hidden;
-}
-
-.wl-admin__login-logo {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .wl-admin__login-eyebrow {

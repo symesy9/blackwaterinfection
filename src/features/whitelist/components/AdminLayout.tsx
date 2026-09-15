@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { HOME_ASSETS } from "../../../lib/homeAssets";
 import { useAdminAuth } from "../hooks/useAdminAuth";
+import AdminLogoMark from "./AdminLogoMark";
 
 const NAV = [
   { to: "/admin", label: "Dashboard", end: true },
@@ -89,16 +90,7 @@ export default function AdminLayout() {
 
       <header className="wl-admin__mobile-bar">
         <Link to="/" className="wl-admin__brand" onClick={closeMenu}>
-          <span className="wl-admin__logo-wrap" aria-hidden="true">
-            <img
-              className="wl-admin__logo"
-              src={HOME_ASSETS.headerLogo}
-              alt=""
-              width={32}
-              height={32}
-              decoding="async"
-            />
-          </span>
+          <AdminLogoMark />
           <span className="wl-admin__brand-text">
             <span className="wl-admin__brand-main">BLACKWATER LABS</span>
             <span className="wl-admin__brand-sub">Admin</span>
@@ -124,7 +116,13 @@ export default function AdminLayout() {
         aria-hidden={!menuOpen}
       >
         <div className="wl-admin__drawer-inner">
-          <p className="wl-admin__drawer-eyebrow">Admin clearance</p>
+          <Link to="/" className="wl-admin__drawer-brand" onClick={closeMenu}>
+            <AdminLogoMark variant="drawer" />
+            <span className="wl-admin__brand-text">
+              <span className="wl-admin__brand-main">BLACKWATER LABS</span>
+              <span className="wl-admin__brand-sub">Admin Clearance</span>
+            </span>
+          </Link>
           <div className="wl-admin__drawer-scroll">
             <AdminNavLinks onNavigate={closeMenu} />
             <hr className="wl-admin__divider" />
@@ -155,16 +153,7 @@ export default function AdminLayout() {
 
       <aside className="wl-admin__sidebar" aria-label="Admin navigation">
         <Link to="/" className="wl-admin__brand wl-admin__brand--sidebar">
-          <span className="wl-admin__logo-wrap wl-admin__logo-wrap--sidebar">
-            <img
-              className="wl-admin__logo"
-              src={HOME_ASSETS.headerLogo}
-              alt=""
-              width={32}
-              height={32}
-              decoding="async"
-            />
-          </span>
+          <AdminLogoMark variant="sidebar" />
           <span className="wl-admin__brand-text">
             <span className="wl-admin__brand-main">BLACKWATER LABS</span>
             <span className="wl-admin__brand-sub">Admin Clearance</span>

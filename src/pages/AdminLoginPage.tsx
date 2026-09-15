@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
+import AdminLogoMark from "../features/whitelist/components/AdminLogoMark";
 import { HOME_ASSETS } from "../lib/homeAssets";
 import { useAdminAuth } from "../features/whitelist/hooks/useAdminAuth";
 
@@ -79,16 +80,7 @@ export default function AdminLoginPage() {
       </div>
 
       <form className="wl-admin__login-card" onSubmit={(e) => void onSubmit(e)}>
-        <span className="wl-admin__login-logo-wrap" aria-hidden="true">
-          <img
-            className="wl-admin__login-logo"
-            src={HOME_ASSETS.headerLogo}
-            alt=""
-            width={40}
-            height={40}
-            decoding="async"
-          />
-        </span>
+        <AdminLogoMark variant="login" />
         <p className="wl-admin__login-eyebrow">BLACKWATER LABS</p>
         <h1 className="wl-admin__login-title">Admin Clearance</h1>
         <p className="wl-admin__login-lead">
