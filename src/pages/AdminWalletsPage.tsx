@@ -67,7 +67,7 @@ export default function AdminWalletsPage() {
   }, [filters]);
 
   useEffect(() => {
-    document.title = "Wallets — Blackwater Labs Admin";
+    document.title = "WL Applications — Blackwater Labs Admin";
   }, []);
 
   useEffect(() => {
@@ -130,7 +130,7 @@ export default function AdminWalletsPage() {
     <div className="wl-admin-wallets">
       <div className="wl-admin__page-header">
         <div>
-          <h1 className="wl-admin__page-title">Wallet Management</h1>
+          <h1 className="wl-admin__page-title">WL Applications</h1>
           <p className="wl-admin__page-lead">{total} records matching filters</p>
         </div>
         <button
