@@ -27,6 +27,7 @@ import {
 import { sanitizeNotes } from "../features/whitelist/lib/sanitize";
 import { shortenWalletAddress } from "../features/whitelist/lib/wallet";
 import AddWalletPanel from "../features/whitelist/components/AddWalletPanel";
+import AdminWhitelistChecker from "../features/whitelist/components/AdminWhitelistChecker";
 
 const PAGE_SIZE = 25;
 
@@ -140,6 +141,8 @@ export default function AdminWalletsPage() {
           Add Wallet
         </button>
       </div>
+
+      <AdminWhitelistChecker onWalletsChanged={() => void loadWallets()} />
 
       <div className="wl-admin__filters">
         <input

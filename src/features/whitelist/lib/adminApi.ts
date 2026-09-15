@@ -273,6 +273,51 @@ export async function resetConfirmation(id: string): Promise<WhitelistWallet> {
   );
 }
 
+export async function countUnconfirmedWallets(): Promise<number> {
+  const supabase = getSupabase();
+  const { count, error } = await supabase
+    .from("whitelist_wallets")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "unconfirmed")
+    .eq("is_active", true);
+
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function confirmAllUnconfirmedWallets(): Promise<number> {
+  const supabase = getSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const confirmedAt = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("whitelist_wallets")
+    .update({
+      status: "confirmed",
+      confirmation_method: "admin",
+      confirmed_at: confirmedAt,
+      updated_by: user?.id ?? null,
+    })
+    .eq("status", "unconfirmed")
+    .eq("is_active", true)
+    .select("id");
+
+  if (error) throw error;
+
+  const confirmed = data?.length ?? 0;
+
+  if (confirmed > 0) {
+    await logAuditEvent("bulk_confirm_all", null, null, {
+      confirmed,
+      confirmed_at: confirmedAt,
+    });
+  }
+
+  return confirmed;
+}
+
 export async function bulkImportWallets(
   batchName: string,
   rows: Array<{
