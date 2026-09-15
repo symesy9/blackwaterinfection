@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
+import { HOME_ASSETS } from "../lib/homeAssets";
 import { useAdminAuth } from "../features/whitelist/hooks/useAdminAuth";
 
 export default function AdminLoginPage() {
@@ -19,10 +20,10 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     document.documentElement.classList.add("rz2-page-scroll");
-    document.body.classList.add("rz2-page-scroll");
+    document.body.classList.add("rz2-page-scroll", "wl-admin-active");
     return () => {
       document.documentElement.classList.remove("rz2-page-scroll");
-      document.body.classList.remove("rz2-page-scroll");
+      document.body.classList.remove("rz2-page-scroll", "wl-admin-active");
     };
   }, []);
 
@@ -55,7 +56,39 @@ export default function AdminLoginPage() {
 
   return (
     <div className="wl-admin wl-admin--login">
+      <div className="wl-admin__fx" aria-hidden="true">
+        <img
+          className="wl-admin__atmosphere"
+          src={HOME_ASSETS.atmosphere}
+          alt=""
+          width={1672}
+          height={941}
+          decoding="async"
+        />
+        <img
+          className="wl-admin__lab"
+          src={HOME_ASSETS.labOverlay}
+          alt=""
+          width={1536}
+          height={1024}
+          loading="lazy"
+          decoding="async"
+        />
+        <div className="wl-admin__grain" />
+        <div className="wl-admin__vignette" />
+      </div>
+
       <form className="wl-admin__login-card" onSubmit={(e) => void onSubmit(e)}>
+        <span className="wl-admin__login-logo-wrap" aria-hidden="true">
+          <img
+            className="wl-admin__login-logo"
+            src={HOME_ASSETS.headerLogo}
+            alt=""
+            width={40}
+            height={40}
+            decoding="async"
+          />
+        </span>
         <p className="wl-admin__login-eyebrow">BLACKWATER LABS</p>
         <h1 className="wl-admin__login-title">Admin Clearance</h1>
         <p className="wl-admin__login-lead">

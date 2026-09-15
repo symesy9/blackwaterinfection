@@ -389,7 +389,7 @@ body.bw-fcfs-active {
   }
 }
 
-/* Admin supplements — unchanged whitelist admin styling */
+/* Admin supplements — Blackwater gold theme */
 
 .wl-admin__header-actions {
   display: flex;
@@ -430,7 +430,7 @@ body.bw-fcfs-active {
 }
 
 .wl-admin__table tr.is-selected {
-  background: rgba(200, 32, 42, 0.08);
+  background: rgba(201, 162, 39, 0.1);
 }
 
 .wl-admin__table tbody tr {
@@ -466,9 +466,9 @@ body.bw-fcfs-active {
   width: 1.75rem;
   height: 1.75rem;
   padding: 0;
-  border: 1px solid rgba(58, 32, 32, 0.55);
+  border: 1px solid rgba(201, 162, 39, 0.25);
   background: transparent;
-  color: var(--wl-muted, rgba(180, 170, 160, 0.55));
+  color: var(--wl-muted, rgba(180, 170, 160, 0.62));
   cursor: pointer;
   flex-shrink: 0;
   transition:
@@ -477,8 +477,8 @@ body.bw-fcfs-active {
 }
 
 .wl-admin__copy-btn:hover {
-  color: var(--wl-text, #e8e0d8);
-  border-color: var(--wl-accent, #c42028);
+  color: var(--wl-text, rgba(232, 224, 214, 0.94));
+  border-color: var(--wl-accent, #c9a227);
 }
 
 .wl-admin__copy-btn.is-copied {
@@ -507,7 +507,7 @@ body.bw-fcfs-active {
   font-size: 0.68rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  border: 1px solid rgba(58, 32, 32, 0.6);
+  border: 1px solid rgba(201, 162, 39, 0.2);
 }
 
 .wl-admin__status--pending {
@@ -519,7 +519,7 @@ body.bw-fcfs-active {
 }
 
 .wl-admin__status--rejected {
-  color: var(--wl-danger, #c42028);
+  color: var(--wl-danger, #c47070);
 }
 
 @media (max-width: 640px) {
