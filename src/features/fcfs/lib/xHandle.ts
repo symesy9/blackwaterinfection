@@ -14,6 +14,13 @@ export function formatXHandleDisplay(handle: string): string {
   return `@${normalised}`;
 }
 
+/** Public X profile URL for a handle, or null if not linkable. */
+export function xProfileUrl(handle: string): string | null {
+  const normalised = normaliseXHandle(handle);
+  if (!normalised || !X_HANDLE_RE.test(normalised)) return null;
+  return `https://x.com/${normalised}`;
+}
+
 export function validateXHandleInput(handle: string): {
   valid: boolean;
   normalised: string | null;

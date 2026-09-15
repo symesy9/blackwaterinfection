@@ -501,6 +501,16 @@ body.bw-fcfs-active {
   border-color: rgba(200, 144, 32, 0.45);
 }
 
+.wl-admin__x-link {
+  color: var(--wl-accent, #c9a227);
+  text-decoration: none;
+}
+
+.wl-admin__x-link:hover {
+  color: var(--wl-accent-hover, #e0b830);
+  text-decoration: underline;
+}
+
 .wl-admin__status {
   display: inline-block;
   padding: 0.15rem 0.45rem;

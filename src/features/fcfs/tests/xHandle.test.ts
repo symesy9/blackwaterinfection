@@ -3,6 +3,7 @@ import {
   formatXHandleDisplay,
   normaliseXHandle,
   validateXHandleInput,
+  xProfileUrl,
 } from "../lib/xHandle";
 
 describe("xHandle", () => {
@@ -15,6 +16,13 @@ describe("xHandle", () => {
     const result = validateXHandleInput("@blackwater_z26");
     expect(result.valid).toBe(true);
     expect(result.normalised).toBe("blackwater_z26");
+  });
+
+  it("builds X profile URLs from handles", () => {
+    expect(xProfileUrl("@User_Name")).toBe("https://x.com/user_name");
+    expect(xProfileUrl("blackwater_z26")).toBe("https://x.com/blackwater_z26");
+    expect(xProfileUrl("")).toBeNull();
+    expect(xProfileUrl("bad handle")).toBeNull();
   });
 
   it("rejects invalid handles", () => {

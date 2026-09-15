@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import AddFcfsPanel from "../features/fcfs/components/AddFcfsPanel";
+import XHandleLink from "../features/fcfs/components/XHandleLink";
 import {
   approvedWalletsToCsv,
   downloadCsv,
@@ -334,7 +335,7 @@ export default function AdminFcfsPage() {
                     onClick={() => setSelectedId(application.id)}
                   >
                     <td>
-                      {application.x_handle}
+                      <XHandleLink handle={application.x_handle} />
                       {duplicateHandle ? (
                         <span className="wl-admin__badge wl-admin__badge--warn">
                           duplicate handle
