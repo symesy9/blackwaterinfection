@@ -193,6 +193,10 @@ body.bw-fcfs-active {
   transform: translateY(-1px);
 }
 
+.fcfs-form__link-btn--optional {
+  opacity: 0.88;
+}
+
 .fcfs-form__check {
   display: flex;
   align-items: flex-start;

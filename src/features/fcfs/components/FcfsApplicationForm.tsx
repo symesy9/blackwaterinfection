@@ -22,21 +22,39 @@ export default function FcfsApplicationForm() {
   const handleValidation = useMemo(() => validateXHandleInput(xHandle), [xHandle]);
 
   const canApply =
-    followOpenedAt !== null &&
     followConfirmedAt !== null &&
-    shareOpenedAt !== null &&
     shareConfirmedAt !== null &&
     walletValidation.valid &&
     handleValidation.valid &&
     !submitting;
 
+  const setFollowConfirmed = (checked: boolean) => {
+    if (checked) {
+      const now = new Date().toISOString();
+      setFollowOpenedAt(now);
+      setFollowConfirmedAt(now);
+      return;
+    }
+    setFollowOpenedAt(null);
+    setFollowConfirmedAt(null);
+  };
+
+  const setShareConfirmed = (checked: boolean) => {
+    if (checked) {
+      const now = new Date().toISOString();
+      setShareOpenedAt(now);
+      setShareConfirmedAt(now);
+      return;
+    }
+    setShareOpenedAt(null);
+    setShareConfirmedAt(null);
+  };
+
   const openFollowLink = () => {
-    setFollowOpenedAt(new Date().toISOString());
     window.open(BLACKWATER_X_URL, "_blank", "noopener,noreferrer");
   };
 
   const openShareLink = () => {
-    setShareOpenedAt(new Date().toISOString());
     window.open(BLACKWATER_PINNED_POST_URL, "_blank", "noopener,noreferrer");
   };
 
@@ -121,11 +139,12 @@ export default function FcfsApplicationForm() {
             <h2 className="fcfs-form__step-title">Follow Blackwater</h2>
           </div>
           <p className="fcfs-form__step-copy">
-            Open the official Blackwater profile on X, then confirm you are following.
+            Follow Blackwater on X, then tick the box below to confirm. You can open
+            the profile first if you need the link.
           </p>
           <button
             type="button"
-            className="fcfs-form__link-btn"
+            className="fcfs-form__link-btn fcfs-form__link-btn--optional"
             onClick={openFollowLink}
           >
             Open Blackwater on X
@@ -134,12 +153,7 @@ export default function FcfsApplicationForm() {
             <input
               type="checkbox"
               checked={followConfirmedAt !== null}
-              disabled={!followOpenedAt}
-              onChange={(event) =>
-                setFollowConfirmedAt(
-                  event.target.checked ? new Date().toISOString() : null,
-                )
-              }
+              onChange={(event) => setFollowConfirmed(event.target.checked)}
             />
             <span>I am following Blackwater on X</span>
           </label>
@@ -151,11 +165,12 @@ export default function FcfsApplicationForm() {
             <h2 className="fcfs-form__step-title">Share / Repost</h2>
           </div>
           <p className="fcfs-form__step-copy">
-            Open the official post, share or repost it, then confirm below.
+            Share or repost the official post on X, then tick the box below to
+            confirm. You can open the post first if you need the link.
           </p>
           <button
             type="button"
-            className="fcfs-form__link-btn"
+            className="fcfs-form__link-btn fcfs-form__link-btn--optional"
             onClick={openShareLink}
           >
             Open Post on X
@@ -164,12 +179,7 @@ export default function FcfsApplicationForm() {
             <input
               type="checkbox"
               checked={shareConfirmedAt !== null}
-              disabled={!shareOpenedAt}
-              onChange={(event) =>
-                setShareConfirmedAt(
-                  event.target.checked ? new Date().toISOString() : null,
-                )
-              }
+              onChange={(event) => setShareConfirmed(event.target.checked)}
             />
             <span>I have shared/reposted the official post</span>
           </label>

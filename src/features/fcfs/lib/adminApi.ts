@@ -248,6 +248,48 @@ export async function updateFcfsApplication(
   return data as FcfsApplication;
 }
 
+export async function countPendingFcfsApplications(): Promise<number> {
+  const supabase = getSupabase();
+  const { count, error } = await supabase
+    .from("fcfs_applications")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "pending");
+
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function approveAllPendingFcfsApplications(): Promise<number> {
+  const supabase = getSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const reviewedAt = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("fcfs_applications")
+    .update({
+      status: "approved",
+      reviewed_at: reviewedAt,
+      reviewed_by: user?.id ?? null,
+    })
+    .eq("status", "pending")
+    .select("id");
+
+  if (error) throw error;
+
+  const approved = data?.length ?? 0;
+
+  if (approved > 0) {
+    await logFcfsAudit("fcfs_bulk_approve_all", data![0]!.id, "", {
+      approved,
+      reviewed_at: reviewedAt,
+    });
+  }
+
+  return approved;
+}
+
 export async function setFcfsApplicationStatus(
   id: string,
   status: FcfsApplicationStatus,

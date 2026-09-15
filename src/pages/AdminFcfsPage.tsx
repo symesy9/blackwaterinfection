@@ -8,6 +8,7 @@ import {
   fcfsExportFilename,
 } from "../features/fcfs/lib/csv";
 import {
+  approveAllPendingFcfsApplications,
   copyToClipboard,
   fetchAllFcfsApplicationsForExport,
   fetchDuplicateXHandles,
@@ -91,6 +92,7 @@ export default function AdminFcfsPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [approvingAll, setApprovingAll] = useState(false);
   const [editWallet, setEditWallet] = useState("");
   const [editHandle, setEditHandle] = useState("");
 
@@ -194,6 +196,43 @@ export default function AdminFcfsPage() {
     }
   };
 
+  const runApproveAll = async () => {
+    const pending = stats?.pending ?? 0;
+    if (pending === 0) {
+      setExportMessage("No pending FCFS applications to approve.");
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Approve all ${pending} pending FCFS application${pending === 1 ? "" : "s"}?`,
+      )
+    ) {
+      return;
+    }
+
+    setApprovingAll(true);
+    setExportMessage("");
+    setError("");
+    try {
+      const approved = await approveAllPendingFcfsApplications();
+      setExportMessage(
+        approved === 0
+          ? "No pending FCFS applications to approve."
+          : `Approved ${approved} application${approved === 1 ? "" : "s"}.`,
+      );
+      if (selectedId && detail?.status === "pending") {
+        setDetail({ ...detail, status: "approved" });
+      }
+      void loadApplications();
+      void loadStats();
+    } catch {
+      setError("Approve all failed. Please try again.");
+    } finally {
+      setApprovingAll(false);
+    }
+  };
+
   const runExport = async (kind: "all" | "approved") => {
     setExporting(true);
     setExportMessage("");
@@ -241,6 +280,16 @@ export default function AdminFcfsPage() {
         <div className="wl-admin__header-actions">
           <button
             type="button"
+            className="wl-admin__btn wl-admin__btn--primary"
+            disabled={approvingAll || (stats?.pending ?? 0) === 0}
+            onClick={() => void runApproveAll()}
+          >
+            {approvingAll
+              ? "Approving all…"
+              : `Approve All${stats ? ` (${stats.pending})` : ""}`}
+          </button>
+          <button
+            type="button"
             className="wl-admin__btn wl-admin__btn--ghost"
             disabled={exporting}
             onClick={() => void runExport("all")}
@@ -257,7 +306,7 @@ export default function AdminFcfsPage() {
           </button>
           <button
             type="button"
-            className="wl-admin__btn wl-admin__btn--primary"
+            className="wl-admin__btn wl-admin__btn--ghost"
             onClick={() => setShowAdd(true)}
           >
             Add Application

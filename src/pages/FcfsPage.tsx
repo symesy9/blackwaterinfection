@@ -42,7 +42,7 @@ export default function FcfsPage() {
             </h1>
             <p className="fcfs-page__lead">
               Complete the clearance sequence to apply for FCFS mint eligibility.
-              Follow → Share → X Handle → Wallet → Apply.
+              Confirm follow & share → X Handle → Wallet → Apply.
             </p>
           </header>
 
