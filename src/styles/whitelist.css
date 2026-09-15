@@ -315,6 +315,174 @@ body.bw-whitelist-active {
   border: 1px solid rgba(201, 162, 39, 0.22);
 }
 
+/* ── Unified Wallet Checker (WL + FCFS) ── */
+
+.wc-checker__rules {
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 1.1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.14);
+}
+
+.wc-checker__rules-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.wc-checker__rules-label {
+  color: var(--bw-muted, rgba(180, 170, 160, 0.62));
+}
+
+.wc-checker__rules-value {
+  color: var(--bw-gold, #c9a227);
+}
+
+.wc-checker__results {
+  margin-top: 1.25rem;
+}
+
+.wc-checker__wallet {
+  margin: 0 0 0.65rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bw-muted, rgba(180, 170, 160, 0.62));
+}
+
+.wc-checker__headline {
+  margin: 0 0 1rem;
+  font-size: clamp(0.95rem, 4vw, 1.1rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bw-gold, #c9a227);
+  text-align: center;
+}
+
+.wc-checker__cards {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.wc-card {
+  padding: 1rem 1.05rem;
+  border: 1px solid rgba(201, 162, 39, 0.2);
+  background: rgba(8, 6, 7, 0.58);
+}
+
+.wc-card--approved {
+  border-color: rgba(201, 162, 39, 0.55);
+  box-shadow: 0 0 18px rgba(201, 162, 39, 0.08);
+}
+
+.wc-card--pending {
+  border-color: rgba(200, 144, 32, 0.42);
+}
+
+.wc-card--not-approved {
+  border-color: rgba(196, 112, 112, 0.35);
+}
+
+.wc-card--not-found {
+  border-color: rgba(140, 140, 140, 0.28);
+  opacity: 0.92;
+}
+
+.wc-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.wc-card__category {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bw-text, rgba(232, 224, 214, 0.94));
+}
+
+.wc-card__status {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bw-gold, #c9a227);
+  text-align: right;
+}
+
+.wc-card--pending .wc-card__status {
+  color: #c89020;
+}
+
+.wc-card--not-approved .wc-card__status {
+  color: #c47070;
+}
+
+.wc-card--not-found .wc-card__status {
+  color: rgba(180, 170, 160, 0.55);
+}
+
+.wc-card__check {
+  color: var(--bw-gold, #c9a227);
+}
+
+.wc-card__allocation,
+.wc-card__price {
+  margin: 0.25rem 0 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bw-text, rgba(232, 224, 214, 0.94));
+}
+
+.wc-card__support {
+  margin: 0.65rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  color: var(--bw-muted, rgba(180, 170, 160, 0.62));
+}
+
+.wc-card__link {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--bw-gold, #c9a227);
+  border-bottom: 1px solid rgba(201, 162, 39, 0.35);
+}
+
+.wc-card__link:hover {
+  border-bottom-color: rgba(201, 162, 39, 0.75);
+}
+
+.wc-checker__fcfs-note {
+  margin: 0.85rem 0 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--bw-muted, rgba(180, 170, 160, 0.62));
+}
+
+.wc-checker__inline-link {
+  color: var(--bw-gold, #c9a227);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.35);
+}
+
+.wc-checker__inline-link:hover {
+  border-bottom-color: rgba(201, 162, 39, 0.75);
+}
+
 @media (min-width: 1024px) {
   .bw-whitelist__shell {
     margin-left: 12.5rem;

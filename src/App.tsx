@@ -5,6 +5,7 @@ import ContainmentProtocol from "./pages/ContainmentProtocol";
 import InfectionStation from "./pages/InfectionStation";
 import HomePage from "./pages/HomePage";
 import Transmission from "./pages/Transmission";
+import WalletCheckerPage from "./pages/WalletCheckerPage";
 import WhitelistCheckerPage from "./pages/WhitelistCheckerPage";
 import FcfsPage from "./pages/FcfsPage";
 import RoadmapPage from "./pages/RoadmapPage";
@@ -57,6 +58,7 @@ export default function App() {
           path="/containment"
           element={CONTAINMENT_GAME_PUBLIC ? <ContainmentProtocol /> : <Navigate to="/" replace />}
         />
+        <Route path="/wallet-checker" element={<WalletCheckerPage />} />
         <Route path="/whitelist" element={<WhitelistCheckerPage />} />
         <Route path="/fcfs" element={<FcfsPage />} />
         <Route path="/roadmap" element={<RoadmapPage />} />
