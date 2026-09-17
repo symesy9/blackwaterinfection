@@ -4,6 +4,8 @@ import { formatXHandleDisplay } from "./xHandle";
 import { validateWalletInput } from "../../whitelist/lib/wallet";
 import { validateXHandleInput } from "./xHandle";
 
+export const FCFS_HONEYPOT_FIELD = "company_website";
+
 export interface FcfsSubmissionPayload {
   wallet_address: string;
   x_handle: string;
@@ -11,6 +13,8 @@ export interface FcfsSubmissionPayload {
   follow_confirmed_at: string;
   share_opened_at: string;
   share_confirmed_at: string;
+  turnstile_token: string;
+  [FCFS_HONEYPOT_FIELD]?: string;
 }
 
 export async function submitFcfsApplication(
@@ -26,6 +30,10 @@ export async function submitFcfsApplication(
     return { outcome: "invalid_x_handle" };
   }
 
+  if (!payload.turnstile_token.trim()) {
+    return { outcome: "turnstile_failed" };
+  }
+
   return invokeEdgeFunction<FcfsSubmitResult>("submit-fcfs-application", {
     wallet_address: walletValidation.display,
     x_handle: formatXHandleDisplay(handleValidation.normalised ?? ""),
@@ -33,5 +41,7 @@ export async function submitFcfsApplication(
     follow_confirmed_at: payload.follow_confirmed_at,
     share_opened_at: payload.share_opened_at,
     share_confirmed_at: payload.share_confirmed_at,
+    turnstile_token: payload.turnstile_token,
+    [FCFS_HONEYPOT_FIELD]: payload[FCFS_HONEYPOT_FIELD] ?? "",
   });
 }

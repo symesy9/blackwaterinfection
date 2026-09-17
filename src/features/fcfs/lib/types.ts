@@ -132,6 +132,8 @@ export type FcfsSubmitOutcome =
   | "incomplete_verification"
   | "invalid_timestamps"
   | "session_expired"
+  | "turnstile_failed"
+  | "turnstile_expired"
   | "error"
   | "rate_limited";
 

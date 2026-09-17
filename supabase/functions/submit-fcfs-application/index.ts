@@ -1,5 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import {
+  extractTurnstileToken,
+  isHoneypotTriggered,
+  turnstileOutcomeFromVerify,
+  verifyTurnstileToken,
+} from "./verify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,7 +14,7 @@ const corsHeaders = {
 };
 
 const RATE_WINDOW_SECONDS = 60;
-const RATE_MAX_REQUESTS = 10;
+const RATE_MAX_REQUESTS = 5;
 
 function getClientIp(req: Request): string {
   return (
@@ -23,6 +29,24 @@ function parseTimestamp(value: unknown): string | null {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
   return date.toISOString();
+}
+
+async function logFcfsSecurityEvent(
+  supabase: ReturnType<typeof createClient>,
+  eventType: string,
+  metadata: Record<string, unknown> = {},
+): Promise<void> {
+  const { error } = await supabase.from("audit_events").insert({
+    event_type: eventType,
+    wallet_id: null,
+    wallet_address_snapshot: null,
+    event_source: "public",
+    metadata,
+  });
+
+  if (error) {
+    console.error("fcfs security audit log failed", eventType, error.message);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -40,6 +64,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const turnstileSecret = Deno.env.get("TURNSTILE_SECRET_KEY") ?? "";
 
     if (!supabaseUrl || !serviceRoleKey) {
       return new Response(JSON.stringify({ outcome: "error" }), {
@@ -50,6 +75,16 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
     const clientIp = getClientIp(req);
+    const body = (await req.json()) as Record<string, unknown>;
+
+    if (isHoneypotTriggered(body)) {
+      await logFcfsSecurityEvent(supabase, "fcfs_honeypot_blocked", {
+        client_ip: clientIp,
+      });
+      return new Response(JSON.stringify({ outcome: "error" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { data: allowed, error: rateError } = await supabase.rpc(
       "check_rate_limit",
@@ -61,13 +96,32 @@ Deno.serve(async (req) => {
     );
 
     if (rateError || !allowed) {
+      await logFcfsSecurityEvent(supabase, "fcfs_rate_limited", {
+        client_ip: clientIp,
+      });
       return new Response(JSON.stringify({ outcome: "rate_limited" }), {
         status: 429,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const body = await req.json();
+    const turnstileResult = await verifyTurnstileToken(
+      turnstileSecret,
+      extractTurnstileToken(body),
+      clientIp,
+    );
+
+    if (!turnstileResult.ok) {
+      const outcome = turnstileOutcomeFromVerify(turnstileResult);
+      await logFcfsSecurityEvent(supabase, "fcfs_turnstile_rejected", {
+        client_ip: clientIp,
+        reason: turnstileResult.reason,
+      });
+      return new Response(JSON.stringify({ outcome }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const walletAddress =
       typeof body?.wallet_address === "string" ? body.wallet_address : "";
     const xHandle = typeof body?.x_handle === "string" ? body.x_handle : "";
@@ -90,6 +144,13 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ outcome: "error" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const result = data as { outcome?: string };
+    if (result.outcome === "already_registered") {
+      await logFcfsSecurityEvent(supabase, "fcfs_duplicate_wallet_blocked", {
+        client_ip: clientIp,
       });
     }
 

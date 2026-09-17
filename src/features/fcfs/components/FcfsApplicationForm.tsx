@@ -1,8 +1,14 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useCallback, useMemo, useState, type FormEvent } from "react";
 import { isSupabaseConfigured } from "../../whitelist/lib/supabase";
 import { validateWalletInput } from "../../whitelist/lib/wallet";
 import { BLACKWATER_PINNED_POST_URL, BLACKWATER_X_URL } from "../../../lib/blackwaterLinks";
-import { submitFcfsApplication } from "../lib/publicApi";
+import TurnstileWidget from "./TurnstileWidget";
+import {
+  FCFS_HONEYPOT_FIELD,
+  submitFcfsApplication,
+} from "../lib/publicApi";
+import { fcfsSubmitErrorDisplay } from "../lib/submitErrors";
+import { isTurnstileConfigured } from "../lib/turnstileConfig";
 import { validateXHandleInput } from "../lib/xHandle";
 
 type FormPhase = "active" | "success" | "error";
@@ -14,12 +20,22 @@ export default function FcfsApplicationForm() {
   const [shareConfirmedAt, setShareConfirmedAt] = useState<string | null>(null);
   const [xHandle, setXHandle] = useState("");
   const [wallet, setWallet] = useState("");
+  const [honeypot, setHoneypot] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [phase, setPhase] = useState<FormPhase>("active");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorTitle, setErrorTitle] = useState("");
+  const [errorDetail, setErrorDetail] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const walletValidation = useMemo(() => validateWalletInput(wallet), [wallet]);
   const handleValidation = useMemo(() => validateXHandleInput(xHandle), [xHandle]);
+  const turnstileReady = isTurnstileConfigured();
+
+  const resetTurnstile = useCallback(() => {
+    setTurnstileToken(null);
+    setTurnstileResetKey((current) => current + 1);
+  }, []);
 
   const canApply =
     followOpenedAt !== null &&
@@ -28,6 +44,8 @@ export default function FcfsApplicationForm() {
     shareConfirmedAt !== null &&
     walletValidation.valid &&
     handleValidation.valid &&
+    turnstileToken !== null &&
+    turnstileReady &&
     !submitting;
 
   const openFollowLink = () => {
@@ -40,6 +58,14 @@ export default function FcfsApplicationForm() {
     window.open(BLACKWATER_PINNED_POST_URL, "_blank", "noopener,noreferrer");
   };
 
+  const showSubmitError = (outcome: Parameters<typeof fcfsSubmitErrorDisplay>[0]) => {
+    const display = fcfsSubmitErrorDisplay(outcome);
+    setPhase("error");
+    setErrorTitle(display?.title ?? "Unable to submit application");
+    setErrorDetail(display?.detail ?? "Please try again.");
+    resetTurnstile();
+  };
+
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (
@@ -47,19 +73,22 @@ export default function FcfsApplicationForm() {
       !followOpenedAt ||
       !followConfirmedAt ||
       !shareOpenedAt ||
-      !shareConfirmedAt
+      !shareConfirmedAt ||
+      !turnstileToken
     ) {
       return;
     }
 
     if (!isSupabaseConfigured()) {
       setPhase("error");
-      setErrorMessage("FCFS applications are temporarily unavailable.");
+      setErrorTitle("FCFS applications are temporarily unavailable.");
+      setErrorDetail("");
       return;
     }
 
     setSubmitting(true);
-    setErrorMessage("");
+    setErrorTitle("");
+    setErrorDetail("");
 
     try {
       const result = await submitFcfsApplication({
@@ -69,6 +98,8 @@ export default function FcfsApplicationForm() {
         follow_confirmed_at: followConfirmedAt,
         share_opened_at: shareOpenedAt,
         share_confirmed_at: shareConfirmedAt,
+        turnstile_token: turnstileToken,
+        [FCFS_HONEYPOT_FIELD]: honeypot,
       });
 
       if (result.outcome === "submitted") {
@@ -76,23 +107,12 @@ export default function FcfsApplicationForm() {
         return;
       }
 
-      if (result.outcome === "already_registered") {
-        setPhase("error");
-        setErrorMessage("WALLET ALREADY REGISTERED");
-        return;
-      }
-
-      if (result.outcome === "rate_limited") {
-        setPhase("error");
-        setErrorMessage("Too many attempts. Please wait a moment and try again.");
-        return;
-      }
-
-      setPhase("error");
-      setErrorMessage("Unable to submit application. Check your details and try again.");
+      showSubmitError(result.outcome);
     } catch {
       setPhase("error");
-      setErrorMessage("Unable to submit application. Please try again.");
+      setErrorTitle("Unable to submit application");
+      setErrorDetail("Please try again.");
+      resetTurnstile();
     } finally {
       setSubmitting(false);
     }
@@ -114,6 +134,19 @@ export default function FcfsApplicationForm() {
 
   return (
     <form className="fcfs-form" onSubmit={(event) => void onSubmit(event)} noValidate>
+      <div className="fcfs-form__honeypot" aria-hidden="true">
+        <label htmlFor="fcfs-company-website">Company website</label>
+        <input
+          id="fcfs-company-website"
+          name={FCFS_HONEYPOT_FIELD}
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={honeypot}
+          onChange={(event) => setHoneypot(event.target.value)}
+        />
+      </div>
+
       <ol className="fcfs-form__steps">
         <li className="fcfs-form__step">
           <div className="fcfs-form__step-head">
@@ -229,6 +262,23 @@ export default function FcfsApplicationForm() {
             your seed phrase or private key.
           </p>
         </li>
+
+        <li className="fcfs-form__step fcfs-form__step--security">
+          <div className="fcfs-form__step-head">
+            <span className="fcfs-form__step-num">05</span>
+            <h2 className="fcfs-form__step-title">Security Check</h2>
+          </div>
+          <p className="fcfs-form__step-copy">Verify human clearance before transmission.</p>
+          <div className="fcfs-form__security-panel">
+            <p className="fcfs-form__security-label">Verify human clearance</p>
+            <TurnstileWidget
+              resetKey={turnstileResetKey}
+              onToken={setTurnstileToken}
+              onExpire={resetTurnstile}
+              onError={resetTurnstile}
+            />
+          </div>
+        </li>
       </ol>
 
       <div className="fcfs-form__info">
@@ -242,10 +292,13 @@ export default function FcfsApplicationForm() {
         </p>
       </div>
 
-      {phase === "error" && errorMessage ? (
-        <p className="fcfs-form__error" role="alert">
-          {errorMessage}
-        </p>
+      {phase === "error" && errorTitle ? (
+        <div className="fcfs-form__error-block" role="alert">
+          <p className="fcfs-form__error">{errorTitle}</p>
+          {errorDetail ? (
+            <p className="fcfs-form__error-detail">{errorDetail}</p>
+          ) : null}
+        </div>
       ) : null}
 
       <button
