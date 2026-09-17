@@ -87,4 +87,14 @@ export const TEAM_MEMBERS: TeamMember[] = [
     bio: null,
     clearance: "CLASSIFIED",
   },
+  {
+    id: "callmechen",
+    displayName: "CallMeChen",
+    role: "Marketing Advisor",
+    image: `${TEAM_BASE}/callmechen.png`,
+    xHandle: "@CallMeChenAgain",
+    xUrl: "https://x.com/CallMeChenAgain",
+    bio: null,
+    clearance: "CLASSIFIED",
+  },
 ];

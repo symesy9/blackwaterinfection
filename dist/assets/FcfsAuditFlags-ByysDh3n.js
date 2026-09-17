@@ -1,0 +1,1 @@
+import{N as e}from"./index.vite-Dcgqqxph.js";import{S as t}from"./format-REDkIdZH.js";var n=e();function r({flags:e}){return e.length===0?null:(0,n.jsx)(`ul`,{className:`wl-admin__audit-flags`,children:e.map(e=>(0,n.jsx)(`li`,{children:(0,n.jsx)(`span`,{className:`wl-admin__badge wl-admin__badge--warn`,children:t(e)})},e))})}export{r as t};
