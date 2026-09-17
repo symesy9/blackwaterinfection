@@ -76,6 +76,13 @@ export interface FcfsApplicationFilters {
   burstEnd?: string | null;
   xHandleNormalised?: string | null;
   selectedId?: string | null;
+  hideBursts?: boolean;
+}
+
+export interface FcfsApplicationsListResult {
+  applications: FcfsApplicationEnriched[];
+  total: number;
+  burstHiddenCount: number;
 }
 
 export interface FcfsStats {

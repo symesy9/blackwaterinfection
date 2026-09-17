@@ -1,6 +1,6 @@
 import { isValidEvmWalletAddress } from "../../whitelist/lib/wallet";
 import { validateXHandleInput } from "./xHandle";
-import type { FcfsApplication, FcfsAuditFlag } from "./types";
+import type { FcfsApplication, FcfsApplicationFilters, FcfsAuditFlag } from "./types";
 
 export const FCFS_BURST_WINDOW_MINUTES = 2;
 export const FCFS_BURST_MIN_COUNT = 5;
@@ -89,4 +89,18 @@ export function paginationRange(
   const from = (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
   return { from, to };
+}
+
+export function isBurstInvestigationView(
+  filters: FcfsApplicationFilters,
+): boolean {
+  if (filters.auditFilter === "submission_burst") return true;
+  return Boolean(filters.burstStart && filters.burstEnd);
+}
+
+export function resolveHideBurstsRpcParam(
+  filters: FcfsApplicationFilters,
+): boolean {
+  if (isBurstInvestigationView(filters)) return false;
+  return Boolean(filters.hideBursts);
 }

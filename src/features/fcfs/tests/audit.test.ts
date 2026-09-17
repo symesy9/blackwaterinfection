@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   computeAuditFlags,
+  isBurstInvestigationView,
   isInvalidWalletFormat,
   isMalformedXHandle,
   parseGoToPageInput,
   paginationRange,
+  resolveHideBurstsRpcParam,
 } from "../lib/audit";
 import type { FcfsApplication } from "../lib/types";
 
@@ -60,5 +62,48 @@ describe("fcfs audit helpers", () => {
   it("builds pagination ranges", () => {
     expect(paginationRange(2, 25, 917)).toEqual({ from: 26, to: 50 });
     expect(paginationRange(1, 25, 0)).toEqual({ from: 0, to: 0 });
+  });
+
+  it("detects burst investigation views", () => {
+    expect(
+      isBurstInvestigationView({
+        auditFilter: "submission_burst",
+      }),
+    ).toBe(true);
+    expect(
+      isBurstInvestigationView({
+        burstStart: "2026-01-01T12:00:00.000Z",
+        burstEnd: "2026-01-01T12:02:00.000Z",
+      }),
+    ).toBe(true);
+    expect(isBurstInvestigationView({ hideBursts: true })).toBe(false);
+  });
+
+  it("resolves hide bursts RPC param with investigation override", () => {
+    expect(resolveHideBurstsRpcParam({ hideBursts: true })).toBe(true);
+    expect(resolveHideBurstsRpcParam({ hideBursts: false })).toBe(false);
+    expect(
+      resolveHideBurstsRpcParam({
+        hideBursts: true,
+        auditFilter: "submission_burst",
+      }),
+    ).toBe(false);
+    expect(
+      resolveHideBurstsRpcParam({
+        hideBursts: true,
+        burstStart: "2026-01-01T12:00:00.000Z",
+        burstEnd: "2026-01-01T12:02:00.000Z",
+      }),
+    ).toBe(false);
+  });
+
+  it("combines status and hide bursts in filter state", () => {
+    expect(
+      resolveHideBurstsRpcParam({
+        hideBursts: true,
+        status: "pending",
+        search: "gary",
+      }),
+    ).toBe(true);
   });
 });

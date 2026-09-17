@@ -49,6 +49,7 @@ export default function AdminFcfsPage() {
   const { filters, setFilters } = useFcfsAdminFilters();
   const [applications, setApplications] = useState<FcfsApplicationEnriched[]>([]);
   const [total, setTotal] = useState(0);
+  const [burstHiddenCount, setBurstHiddenCount] = useState(0);
   const [stats, setStats] = useState<FcfsStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -70,6 +71,7 @@ export default function AdminFcfsPage() {
       const result = await fetchFcfsApplicationsEnriched(filters);
       setApplications(result.applications);
       setTotal(result.total);
+      setBurstHiddenCount(result.burstHiddenCount);
     } catch {
       setError("Failed to load FCFS applications.");
     } finally {
@@ -378,6 +380,29 @@ export default function AdminFcfsPage() {
           <option value="wallet:desc">Wallet — Z to A</option>
           <option value="status:asc">Status</option>
         </select>
+      </div>
+
+      <div className="wl-admin__filter-toggle">
+        <label className="wl-admin__filter-check">
+          <input
+            type="checkbox"
+            checked={Boolean(filters.hideBursts)}
+            onChange={(event) =>
+              setFilters((current) => ({
+                ...current,
+                hideBursts: event.target.checked,
+                page: 1,
+              }))
+            }
+          />
+          <span>Hide submission bursts</span>
+        </label>
+        {filters.hideBursts && burstHiddenCount > 0 ? (
+          <span className="wl-admin__filter-toggle-note">
+            {burstHiddenCount.toLocaleString()} burst application
+            {burstHiddenCount === 1 ? "" : "s"} hidden
+          </span>
+        ) : null}
       </div>
 
       {selectedIds.size > 0 ? (

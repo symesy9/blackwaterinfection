@@ -201,6 +201,7 @@ export default function AdminFcfsAuditPage() {
                         auditFilter: "submission_burst",
                         burstStart: burst.bucket_start,
                         burstEnd: burst.bucket_end,
+                        hideBursts: false,
                         page: 1,
                       });
                       return (

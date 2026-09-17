@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
+import { isBurstInvestigationView } from "../lib/audit";
 import type {
   FcfsApplicationFilters,
   FcfsAuditFilter,
@@ -8,6 +9,7 @@ import type {
 } from "../lib/types";
 
 const DEFAULT_PAGE_SIZE = 25;
+export const FCFS_HIDE_BURSTS_STORAGE_KEY = "bw-fcfs-hide-bursts";
 
 const SORT_FIELDS: FcfsSortField[] = [
   "submitted_at",
@@ -56,6 +58,41 @@ function parseEnum<T extends string>(
     : fallback;
 }
 
+function readStoredHideBurstsPreference(): boolean {
+  try {
+    return localStorage.getItem(FCFS_HIDE_BURSTS_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function persistHideBurstsPreference(enabled: boolean): void {
+  try {
+    localStorage.setItem(
+      FCFS_HIDE_BURSTS_STORAGE_KEY,
+      enabled ? "true" : "false",
+    );
+  } catch {
+    // Ignore storage failures (private mode, quota, etc.)
+  }
+}
+
+function parseHideBursts(params: URLSearchParams): boolean {
+  const partialFilters = {
+    auditFilter: parseEnum(params.get("audit"), AUDIT_FILTERS, "all"),
+    burstStart: params.get("burstStart"),
+    burstEnd: params.get("burstEnd"),
+  };
+  if (isBurstInvestigationView(partialFilters)) {
+    return false;
+  }
+
+  const urlParam = params.get("hideBursts");
+  if (urlParam === "true") return true;
+  if (urlParam === "false") return false;
+  return readStoredHideBurstsPreference();
+}
+
 export function parseFcfsFiltersFromSearchParams(
   params: URLSearchParams,
 ): FcfsApplicationFilters {
@@ -74,6 +111,7 @@ export function parseFcfsFiltersFromSearchParams(
     burstEnd: params.get("burstEnd"),
     xHandleNormalised: params.get("xHandle"),
     selectedId: params.get("id"),
+    hideBursts: parseHideBursts(params),
   };
 }
 
@@ -115,6 +153,9 @@ export function fcfsFiltersToSearchParams(
   if (filters.selectedId) {
     params.set("id", filters.selectedId);
   }
+  if (filters.hideBursts) {
+    params.set("hideBursts", "true");
+  }
 
   return params;
 }
@@ -137,6 +178,9 @@ export function useFcfsAdminFilters() {
         const current = parseFcfsFiltersFromSearchParams(currentParams);
         const next =
           typeof updater === "function" ? updater(current) : updater;
+        if (next.hideBursts !== current.hideBursts) {
+          persistHideBurstsPreference(Boolean(next.hideBursts));
+        }
         return fcfsFiltersToSearchParams(next);
       });
     },

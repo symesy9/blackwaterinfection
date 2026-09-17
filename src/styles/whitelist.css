@@ -1011,6 +1011,40 @@ body.wl-admin-menu-open {
   margin-bottom: 1rem;
 }
 
+.wl-admin__filter-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+  margin: -0.35rem 0 1rem;
+}
+
+.wl-admin__filter-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wl-text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.wl-admin__filter-check input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--wl-gold, #c9a227);
+  cursor: pointer;
+}
+
+.wl-admin__filter-toggle-note {
+  font-size: 0.75rem;
+  color: var(--wl-muted);
+}
+
 .wl-admin__field-label {
   display: block;
   font-size: 0.75rem;

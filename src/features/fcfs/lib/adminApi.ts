@@ -9,6 +9,7 @@ import type {
   FcfsApplication,
   FcfsApplicationEnriched,
   FcfsApplicationFilters,
+  FcfsApplicationsListResult,
   FcfsApplicationStatus,
   FcfsAuditFlag,
   FcfsAuditSummary,
@@ -19,6 +20,7 @@ import type {
   ManualFcfsInput,
   ManualReviewReason,
 } from "./types";
+import { resolveHideBurstsRpcParam } from "./audit";
 import { formatXHandleDisplay, normaliseXHandle, validateXHandleInput } from "./xHandle";
 
 export { copyToClipboard };
@@ -66,7 +68,7 @@ function resolveAuditFilter(filters: FcfsApplicationFilters): string {
 
 export async function fetchFcfsApplicationsEnriched(
   filters: FcfsApplicationFilters = {},
-): Promise<{ applications: FcfsApplicationEnriched[]; total: number }> {
+): Promise<FcfsApplicationsListResult> {
   const supabase = getSupabase();
   const auditFilter = resolveAuditFilter(filters);
 
@@ -81,6 +83,7 @@ export async function fetchFcfsApplicationsEnriched(
     p_burst_start: filters.burstStart ?? null,
     p_burst_end: filters.burstEnd ?? null,
     p_x_handle_normalised: filters.xHandleNormalised ?? null,
+    p_hide_bursts: resolveHideBurstsRpcParam(filters),
   });
 
   if (error) throw error;
@@ -93,11 +96,13 @@ export async function fetchFcfsApplicationsEnriched(
       same_burst_count?: number;
     }>;
     total?: number;
+    burst_hidden_count?: number;
   };
 
   return {
     applications: (payload.applications ?? []).map(mapEnrichedRow),
     total: payload.total ?? 0,
+    burstHiddenCount: payload.burst_hidden_count ?? 0,
   };
 }
 
