@@ -72,7 +72,8 @@ export default function AdminFcfsPage() {
       setApplications(result.applications);
       setTotal(result.total);
       setBurstHiddenCount(result.burstHiddenCount);
-    } catch {
+    } catch (err) {
+      console.error("admin_fcfs_list failed", err);
       setError("Failed to load FCFS applications.");
     } finally {
       setLoading(false);

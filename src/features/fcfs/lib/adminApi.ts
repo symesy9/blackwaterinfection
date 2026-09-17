@@ -90,7 +90,10 @@ export async function fetchFcfsApplicationsEnriched(
     p_hide_bursts: resolveHideBurstsRpcParam(filters),
   });
 
-  if (error) throw error;
+  if (error) {
+    console.error("admin_fcfs_list RPC error", error);
+    throw error;
+  }
 
   const payload = data as {
     applications?: Array<{
