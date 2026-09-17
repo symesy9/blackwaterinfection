@@ -152,6 +152,10 @@ Deno.serve(async (req) => {
       await logFcfsSecurityEvent(supabase, "fcfs_duplicate_wallet_blocked", {
         client_ip: clientIp,
       });
+    } else if (result.outcome === "x_handle_already_used") {
+      await logFcfsSecurityEvent(supabase, "fcfs_x_handle_duplicate_blocked", {
+        client_ip: clientIp,
+      });
     }
 
     return new Response(JSON.stringify(data), {

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { fcfsFiltersToSearchParams } from "../features/fcfs/hooks/useFcfsAdminFilters";
 import {
   fetchFcfsBurstWindows,
+  fetchFcfsDataAudit,
   fetchFcfsSubmissionTimeline,
   getFcfsAuditSummary,
 } from "../features/fcfs/lib/adminApi";
@@ -11,6 +12,7 @@ import type {
   FcfsAuditFilter,
   FcfsAuditSummary,
   FcfsBurstWindow,
+  FcfsDataAuditSummary,
   FcfsTimelinePeriod,
 } from "../features/fcfs/lib/types";
 
@@ -18,6 +20,7 @@ export default function AdminFcfsAuditPage() {
   const [summary, setSummary] = useState<FcfsAuditSummary | null>(null);
   const [timeline, setTimeline] = useState<FcfsTimelinePeriod[]>([]);
   const [bursts, setBursts] = useState<FcfsBurstWindow[]>([]);
+  const [dataAudit, setDataAudit] = useState<FcfsDataAuditSummary | null>(null);
   const [granularity, setGranularity] = useState<"day" | "hour" | "minute">(
     "hour",
   );
@@ -28,14 +31,17 @@ export default function AdminFcfsAuditPage() {
     setLoading(true);
     setError("");
     try {
-      const [summaryData, timelineData, burstData] = await Promise.all([
-        getFcfsAuditSummary(),
-        fetchFcfsSubmissionTimeline(granularity),
-        fetchFcfsBurstWindows(),
-      ]);
+      const [summaryData, timelineData, burstData, dataAuditSummary] =
+        await Promise.all([
+          getFcfsAuditSummary(),
+          fetchFcfsSubmissionTimeline(granularity),
+          fetchFcfsBurstWindows(),
+          fetchFcfsDataAudit(),
+        ]);
       setSummary(summaryData);
       setTimeline(timelineData);
       setBursts(burstData);
+      setDataAudit(dataAuditSummary);
     } catch {
       setError("Failed to load FCFS audit data.");
     } finally {
@@ -132,6 +138,66 @@ export default function AdminFcfsAuditPage() {
               </span>
             </div>
           </div>
+
+          {dataAudit ? (
+            <section className="wl-admin__section">
+              <h2 className="wl-admin__section-title">Historical data audit</h2>
+              <p className="wl-admin__muted">
+                Read-only snapshot of existing FCFS records. No applications were
+                modified.
+              </p>
+              <div className="wl-admin__cards wl-admin__cards--audit">
+                <div className="wl-admin__card">
+                  <span className="wl-admin__card-label">Duplicate wallet groups</span>
+                  <span className="wl-admin__card-value">
+                    {dataAudit.duplicate_wallet_groups}
+                  </span>
+                </div>
+                <div className="wl-admin__card">
+                  <span className="wl-admin__card-label">Duplicate X handle groups</span>
+                  <span className="wl-admin__card-value">
+                    <Link to={filterLink("duplicate_x_handle")}>
+                      {dataAudit.duplicate_x_handle_groups}
+                    </Link>
+                  </span>
+                </div>
+                <div className="wl-admin__card">
+                  <span className="wl-admin__card-label">
+                    Applications in duplicate handle groups
+                  </span>
+                  <span className="wl-admin__card-value">
+                    {dataAudit.duplicate_x_handle_applications}
+                  </span>
+                </div>
+                <div className="wl-admin__card">
+                  <span className="wl-admin__card-label">FCFS wallets also on WL</span>
+                  <span className="wl-admin__card-value">
+                    <Link to={filterLink("already_on_whitelist")}>
+                      {dataAudit.fcfs_wallets_on_whitelist}
+                    </Link>
+                  </span>
+                </div>
+                <div className="wl-admin__card">
+                  <span className="wl-admin__card-label">Burst applications</span>
+                  <span className="wl-admin__card-value">
+                    {dataAudit.submission_burst_application_count}
+                  </span>
+                </div>
+                <div className="wl-admin__card">
+                  <span className="wl-admin__card-label">Wallet UNIQUE constraint</span>
+                  <span className="wl-admin__card-value">
+                    {dataAudit.wallet_unique_constraint_present ? "Present" : "Missing"}
+                  </span>
+                </div>
+                <div className="wl-admin__card">
+                  <span className="wl-admin__card-label">X handle UNIQUE index</span>
+                  <span className="wl-admin__card-value">
+                    {dataAudit.x_handle_unique_index_present ? "Present" : "Skipped"}
+                  </span>
+                </div>
+              </div>
+            </section>
+          ) : null}
 
           <section className="wl-admin__section">
             <div className="wl-admin__section-header">

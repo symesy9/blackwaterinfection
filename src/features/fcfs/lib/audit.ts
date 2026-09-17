@@ -23,6 +23,7 @@ export function computeAuditFlags(
   context: {
     duplicateXHandles: Set<string>;
     duplicateWallets: Set<string>;
+    whitelistWallets?: Set<string>;
     burstTimestamps?: Set<number>;
   },
 ): FcfsAuditFlag[] {
@@ -36,6 +37,9 @@ export function computeAuditFlags(
   }
   if (context.duplicateWallets.has(application.wallet_address_normalised)) {
     flags.push("duplicate_wallet");
+  }
+  if (context.whitelistWallets?.has(application.wallet_address_normalised)) {
+    flags.push("already_on_whitelist");
   }
   if (isMalformedXHandle(application.x_handle, application.x_handle_normalised)) {
     flags.push("malformed_x_handle");
@@ -55,9 +59,11 @@ export function auditFlagLabel(flag: FcfsAuditFlag): string {
     case "manual_review":
       return "Flagged for review";
     case "duplicate_x_handle":
-      return "Duplicate X handle";
+      return "X handle used by multiple wallets";
     case "duplicate_wallet":
-      return "Duplicate wallet";
+      return "Exact wallet duplicate";
+    case "already_on_whitelist":
+      return "Already on WL";
     case "malformed_x_handle":
       return "Malformed X handle";
     case "invalid_wallet_format":

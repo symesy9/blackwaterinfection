@@ -21,6 +21,11 @@ export function fcfsSubmitErrorDisplay(
       };
     case "already_registered":
       return { title: "WALLET ALREADY REGISTERED" };
+    case "x_handle_already_used":
+      return {
+        title: "X account already used",
+        detail: "That X account has already been used for an FCFS application.",
+      };
     case "rate_limited":
       return {
         title: "Too many attempts",

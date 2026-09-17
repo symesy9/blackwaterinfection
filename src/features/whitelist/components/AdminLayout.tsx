@@ -9,6 +9,7 @@ const NAV = [
   { to: "/admin/wallets", label: "WL Applications", end: false },
   { to: "/admin/fcfs", label: "FCFS Applications", end: true },
   { to: "/admin/fcfs/audit", label: "FCFS Audit", end: false },
+  { to: "/admin/fcfs/wallet-audit", label: "Wallet Audit", end: false },
   { to: "/admin/import", label: "Import", end: false },
   { to: "/admin/audit", label: "Audit Log", end: false },
   { to: "/admin/export", label: "Export", end: false },

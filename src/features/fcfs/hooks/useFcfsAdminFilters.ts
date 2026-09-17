@@ -29,6 +29,7 @@ const AUDIT_FILTERS: FcfsAuditFilter[] = [
   "manual_review",
   "duplicate_x_handle",
   "duplicate_wallet",
+  "already_on_whitelist",
   "invalid_wallet",
   "malformed_x_handle",
   "submission_burst",

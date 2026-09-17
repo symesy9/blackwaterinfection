@@ -52,6 +52,15 @@ describe("fcfs audit helpers", () => {
     expect(flags).toContain("duplicate_x_handle");
   });
 
+  it("computes already on whitelist flags", () => {
+    const flags = computeAuditFlags(baseApplication, {
+      duplicateXHandles: new Set(),
+      duplicateWallets: new Set(),
+      whitelistWallets: new Set([baseApplication.wallet_address_normalised]),
+    });
+    expect(flags).toContain("already_on_whitelist");
+  });
+
   it("validates go-to-page input", () => {
     expect(parseGoToPageInput("3", 10)).toBe(3);
     expect(parseGoToPageInput("0", 10)).toBeNull();

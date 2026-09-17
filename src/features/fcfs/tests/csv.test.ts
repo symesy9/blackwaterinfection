@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { approvedWalletsToCsv, fcfsApplicationsToCsv } from "../lib/csv";
-import type { FcfsApplication } from "../lib/types";
+import type { FcfsApplicationEnriched } from "../lib/types";
 
-const sample: FcfsApplication = {
+const sample: FcfsApplicationEnriched = {
   id: "11111111-1111-1111-1111-111111111111",
   wallet_address: "0xAbCdEf0123456789012345678901234567890AbCd",
   wallet_address_normalised: "0xabcdef0123456789012345678901234567890abcd",
@@ -21,14 +21,23 @@ const sample: FcfsApplication = {
   manual_review_reason: null,
   created_at: "2026-01-01T12:00:00.000Z",
   updated_at: "2026-01-01T12:00:00.000Z",
+  audit_flags: ["already_on_whitelist"],
+  duplicate_x_handle_count: 2,
+  same_burst_count: 0,
+  already_on_whitelist: true,
 };
 
 describe("fcfs csv", () => {
-  it("exports full application rows", () => {
+  it("exports full application rows with audit fields", () => {
     const csv = fcfsApplicationsToCsv([sample]);
-    expect(csv).toContain("wallet_address_normalised");
+    expect(csv).toContain("already_on_whitelist");
+    expect(csv).toContain("same_x_handle_application_count");
+    expect(csv).toContain("fcfs_status");
+    expect(csv).toContain("audit_flags");
     expect(csv).toContain(sample.wallet_address_normalised);
     expect(csv).toContain("@testuser");
+    expect(csv).toContain("yes");
+    expect(csv).toContain("Already on WL");
   });
 
   it("exports approved wallets only with normalised addresses", () => {

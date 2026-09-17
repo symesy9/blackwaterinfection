@@ -24,6 +24,9 @@ const AdminAuditPage = lazy(() => import("./pages/AdminAuditPage"));
 const AdminExportPage = lazy(() => import("./pages/AdminExportPage"));
 const AdminFcfsPage = lazy(() => import("./pages/AdminFcfsPage"));
 const AdminFcfsAuditPage = lazy(() => import("./pages/AdminFcfsAuditPage"));
+const AdminFcfsWalletAuditPage = lazy(
+  () => import("./pages/AdminFcfsWalletAuditPage"),
+);
 
 function AdminFallback() {
   return (
@@ -135,6 +138,14 @@ export default function App() {
               element={
                 <Suspense fallback={<AdminFallback />}>
                   <AdminFcfsAuditPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="fcfs/wallet-audit"
+              element={
+                <Suspense fallback={<AdminFallback />}>
+                  <AdminFcfsWalletAuditPage />
                 </Suspense>
               }
             />

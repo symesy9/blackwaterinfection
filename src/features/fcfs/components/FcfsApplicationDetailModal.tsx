@@ -7,7 +7,6 @@ import {
   updateFcfsApplication,
   updateFcfsWalletAndHandle,
 } from "../lib/adminApi";
-import { auditFlagLabel } from "../lib/audit";
 import { fcfsFiltersToSearchParams } from "../hooks/useFcfsAdminFilters";
 import {
   fcfsStatusLabel,
@@ -166,23 +165,59 @@ export default function FcfsApplicationDetailModal({
           </div>
         </dl>
 
-        <div className="wl-admin__detail-relations">
-          <p>
-            Same X handle:{" "}
-            <Link to={`/admin/fcfs?${sameHandleParams.toString()}`}>
-              {related?.same_x_handle_count ?? detail.duplicate_x_handle_count}
-            </Link>
-          </p>
-          {detail.same_burst_count > 0 ? (
-            <p>Same submission burst: {detail.same_burst_count} applications</p>
+        <section className="wl-admin__detail-relations">
+          <h3 className="wl-admin__field-label">Related records</h3>
+          <dl className="wl-admin__detail-grid">
+            <div>
+              <dt>X handle</dt>
+              <dd>@{related?.x_handle_normalised ?? detail.x_handle_normalised}</dd>
+            </div>
+            <div>
+              <dt>FCFS applications using handle</dt>
+              <dd>
+                <Link to={`/admin/fcfs?${sameHandleParams.toString()}`}>
+                  {related?.same_x_handle_count ?? detail.duplicate_x_handle_count}
+                </Link>
+              </dd>
+            </div>
+            <div>
+              <dt>FCFS applications using exact wallet</dt>
+              <dd>{related?.same_wallet_count ?? 1}</dd>
+            </div>
+            <div>
+              <dt>Existing whitelist record</dt>
+              <dd>
+                {related?.on_whitelist ?? detail.already_on_whitelist
+                  ? `YES${related?.whitelist_status ? ` (${related.whitelist_status})` : ""}`
+                  : "NO"}
+              </dd>
+            </div>
+            <div>
+              <dt>Submission burst size</dt>
+              <dd>
+                {related?.same_burst_count ?? detail.same_burst_count ?? 0}
+              </dd>
+            </div>
+          </dl>
+          {(related?.related_x_handle_applications ?? []).length > 0 ? (
+            <ul className="wl-admin__related-list">
+              {related!.related_x_handle_applications.map((entry) => {
+                const params = fcfsFiltersToSearchParams({
+                  selectedId: entry.id,
+                  page: 1,
+                });
+                return (
+                  <li key={entry.id}>
+                    <Link to={`/admin/fcfs?${params.toString()}`}>
+                      {entry.wallet_address} · {fcfsStatusLabel(entry.status)} ·{" "}
+                      {formatDateTime(entry.submitted_at)}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           ) : null}
-          {detail.audit_flags.length > 0 ? (
-            <p>
-              Other audit flags:{" "}
-              {detail.audit_flags.map((flag) => auditFlagLabel(flag)).join(", ")}
-            </p>
-          ) : null}
-        </div>
+        </section>
 
         <div className="wl-admin__modal-actions wl-admin__modal-actions--left">
           {xUrl ? (

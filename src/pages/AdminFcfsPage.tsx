@@ -248,6 +248,8 @@ export default function AdminFcfsPage() {
           </p>
           <p className="wl-admin__muted">
             <Link to="/admin/fcfs/audit">Open FCFS Audit →</Link>
+            {" · "}
+            <Link to="/admin/fcfs/wallet-audit">Wallet Audit →</Link>
           </p>
         </div>
         <div className="wl-admin__header-actions">
@@ -309,7 +311,7 @@ export default function AdminFcfsPage() {
         <input
           className="wl-admin__field-input"
           type="search"
-          placeholder="Search X handle or wallet…"
+          placeholder="Search wallet (0x…) or X handle (@user)…"
           value={filters.search ?? ""}
           onChange={(event) =>
             setFilters((current) => ({
@@ -354,7 +356,8 @@ export default function AdminFcfsPage() {
           <option value="no_flags">No flags</option>
           <option value="manual_review">Manual review flag</option>
           <option value="duplicate_x_handle">Duplicate X handle</option>
-          <option value="duplicate_wallet">Duplicate wallet</option>
+          <option value="duplicate_wallet">Exact wallet duplicate</option>
+          <option value="already_on_whitelist">Already on WL</option>
           <option value="invalid_wallet">Invalid wallet format</option>
           <option value="malformed_x_handle">Malformed X handle</option>
           <option value="submission_burst">Submission burst</option>

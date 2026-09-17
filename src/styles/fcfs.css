@@ -650,6 +650,22 @@ body.bw-fcfs-active {
   margin-bottom: 0.75rem;
 }
 
+.wl-admin__related-list {
+  margin: 0.75rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.82rem;
+}
+
+.wl-admin__related-list a {
+  color: var(--wl-gold, #c9a227);
+}
+
+.wl-admin__audit-card {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(201, 162, 39, 0.18);
+}
+
 .wl-admin__detail-relations {
   margin: 0 0 1rem;
   font-size: 0.84rem;

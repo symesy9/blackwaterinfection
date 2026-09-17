@@ -13,42 +13,51 @@ export function fcfsApplicationsToCsv(
 ): string {
   const headers = [
     "wallet_address",
-    "wallet_address_normalised",
     "x_handle",
     "x_handle_normalised",
-    "status",
+    "fcfs_status",
     "submitted_at",
+    "already_on_whitelist",
+    "same_x_handle_application_count",
+    "audit_flags",
+    "manual_review_flag",
+    "manual_review_reason",
+    "wallet_address_normalised",
     "follow_opened_at",
     "follow_confirmed_at",
     "share_opened_at",
     "share_confirmed_at",
-    "manual_review_flag",
-    "manual_review_reason",
-    "audit_flags",
     "internal_notes",
     "reviewed_at",
   ];
 
   const rows = applications.map((app) => {
+    const enriched = app as FcfsApplicationEnriched;
     const auditFlags =
       "audit_flags" in app && app.audit_flags
         ? app.audit_flags.map((flag) => auditFlagLabel(flag)).join("; ")
         : "";
+    const onWhitelist =
+      enriched.already_on_whitelist ??
+      enriched.audit_flags?.includes("already_on_whitelist") ??
+      false;
 
     return [
       app.wallet_address,
-      app.wallet_address_normalised,
       app.x_handle,
       app.x_handle_normalised,
       app.status,
       app.submitted_at,
+      onWhitelist ? "yes" : "no",
+      String(enriched.duplicate_x_handle_count ?? 1),
+      auditFlags,
+      app.manual_review_flag ? "yes" : "no",
+      app.manual_review_reason ?? "",
+      app.wallet_address_normalised,
       app.follow_opened_at ?? "",
       app.follow_confirmed_at ?? "",
       app.share_opened_at ?? "",
       app.share_confirmed_at ?? "",
-      app.manual_review_flag ? "yes" : "no",
-      app.manual_review_reason ?? "",
-      auditFlags,
       app.internal_notes ?? "",
       app.reviewed_at ?? "",
     ]

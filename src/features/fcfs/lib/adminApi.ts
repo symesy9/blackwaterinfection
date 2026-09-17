@@ -14,7 +14,9 @@ import type {
   FcfsAuditFlag,
   FcfsAuditSummary,
   FcfsBurstWindow,
+  FcfsDataAuditSummary,
   FcfsRelatedCounts,
+  FcfsWalletAuditResult,
   FcfsStats,
   FcfsTimelinePeriod,
   ManualFcfsInput,
@@ -39,12 +41,14 @@ function mapEnrichedRow(row: {
   audit_flags?: FcfsAuditFlag[];
   duplicate_x_handle_count?: number;
   same_burst_count?: number;
+  already_on_whitelist?: boolean;
 }): FcfsApplicationEnriched {
   return {
     ...normalizeFcfsApplication(row.application),
     audit_flags: row.audit_flags ?? [],
     duplicate_x_handle_count: row.duplicate_x_handle_count ?? 1,
     same_burst_count: row.same_burst_count ?? 0,
+    already_on_whitelist: Boolean(row.already_on_whitelist),
   };
 }
 
@@ -94,6 +98,7 @@ export async function fetchFcfsApplicationsEnriched(
       audit_flags?: FcfsAuditFlag[];
       duplicate_x_handle_count?: number;
       same_burst_count?: number;
+      already_on_whitelist?: boolean;
     }>;
     total?: number;
     burst_hidden_count?: number;
@@ -154,7 +159,44 @@ export async function fetchFcfsRelatedCounts(
   });
   if (error) throw error;
   if (!data || Object.keys(data as object).length === 0) return null;
-  return data as FcfsRelatedCounts;
+  const payload = data as FcfsRelatedCounts;
+  return {
+    same_x_handle_count: payload.same_x_handle_count ?? 0,
+    same_wallet_count: payload.same_wallet_count ?? 1,
+    same_burst_count: payload.same_burst_count ?? 0,
+    x_handle_normalised: payload.x_handle_normalised ?? "",
+    on_whitelist: Boolean(payload.on_whitelist),
+    whitelist_status: payload.whitelist_status ?? null,
+    related_x_handle_applications: payload.related_x_handle_applications ?? [],
+  };
+}
+
+export async function fetchFcfsWalletAudit(
+  wallet: string,
+): Promise<FcfsWalletAuditResult> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.rpc("admin_fcfs_wallet_audit", {
+    p_wallet: wallet.trim(),
+  });
+  if (error) throw error;
+  const payload = data as FcfsWalletAuditResult;
+  return {
+    ...payload,
+    fcfs_applications: (payload.fcfs_applications ?? []).map((row) => ({
+      application: normalizeFcfsApplication(
+        row.application as unknown as Record<string, unknown>,
+      ),
+      audit_flags: row.audit_flags ?? [],
+      duplicate_x_handle_count: row.duplicate_x_handle_count ?? 1,
+    })),
+  };
+}
+
+export async function fetchFcfsDataAudit(): Promise<FcfsDataAuditSummary> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.rpc("admin_fcfs_data_audit");
+  if (error) throw error;
+  return data as FcfsDataAuditSummary;
 }
 
 export async function fetchFcfsApplicationById(
