@@ -17,6 +17,8 @@ const sample: FcfsApplication = {
   internal_notes: null,
   reviewed_at: null,
   reviewed_by: null,
+  manual_review_flag: false,
+  manual_review_reason: null,
   created_at: "2026-01-01T12:00:00.000Z",
   updated_at: "2026-01-01T12:00:00.000Z",
 };

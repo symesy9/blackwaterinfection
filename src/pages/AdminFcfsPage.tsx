@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import AddFcfsPanel from "../features/fcfs/components/AddFcfsPanel";
+import CopyWalletIconButton from "../features/fcfs/components/CopyWalletIconButton";
+import FcfsApplicationDetailModal from "../features/fcfs/components/FcfsApplicationDetailModal";
+import FcfsAuditFlags from "../features/fcfs/components/FcfsAuditFlags";
+import FcfsPagination from "../features/fcfs/components/FcfsPagination";
 import XHandleLink from "../features/fcfs/components/XHandleLink";
+import { useFcfsAdminFilters } from "../features/fcfs/hooks/useFcfsAdminFilters";
 import {
   approvedWalletsToCsv,
   downloadCsv,
@@ -9,15 +15,11 @@ import {
 } from "../features/fcfs/lib/csv";
 import {
   approveAllPendingFcfsApplications,
+  bulkSetFcfsManualReviewFlag,
   copyToClipboard,
   fetchAllFcfsApplicationsForExport,
-  fetchDuplicateXHandles,
-  fetchFcfsApplicationById,
-  fetchFcfsApplications,
+  fetchFcfsApplicationsEnriched,
   getFcfsStats,
-  setFcfsApplicationStatus,
-  updateFcfsApplication,
-  updateFcfsWalletAndHandle,
 } from "../features/fcfs/lib/adminApi";
 import {
   fcfsStatusLabel,
@@ -25,88 +27,49 @@ import {
   verificationStatus,
 } from "../features/fcfs/lib/format";
 import type {
-  FcfsApplication,
-  FcfsApplicationFilters,
+  FcfsApplicationEnriched,
   FcfsApplicationStatus,
+  FcfsAuditFilter,
+  FcfsSortField,
   FcfsStats,
+  ManualReviewReason,
 } from "../features/fcfs/lib/types";
-import { sanitizeNotes } from "../features/whitelist/lib/sanitize";
 import { shortenWalletAddress } from "../features/whitelist/lib/wallet";
 
-const PAGE_SIZE = 25;
-
-function CopyWalletIconButton({
-  copied,
-  onCopy,
-}: {
-  copied: boolean;
-  onCopy: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className={`wl-admin__copy-btn${copied ? " is-copied" : ""}`}
-      aria-label={copied ? "Wallet address copied" : "Copy wallet address"}
-      title={copied ? "Copied" : "Copy wallet address"}
-      onClick={(event) => {
-        event.stopPropagation();
-        onCopy();
-      }}
-    >
-      {copied ? (
-        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            fill="currentColor"
-            d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"
-          />
-        </svg>
-      ) : (
-        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            fill="currentColor"
-            d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
-          />
-        </svg>
-      )}
-    </button>
-  );
-}
+const REVIEW_REASONS: ManualReviewReason[] = [
+  "X ACCOUNT NOT FOUND",
+  "VERY LOW ACTIVITY",
+  "SUSPICIOUS HANDLE",
+  "SUSPICIOUS SUBMISSION PATTERN",
+  "WALLET ISSUE",
+  "OTHER",
+];
 
 export default function AdminFcfsPage() {
-  const [applications, setApplications] = useState<FcfsApplication[]>([]);
+  const { filters, setFilters } = useFcfsAdminFilters();
+  const [applications, setApplications] = useState<FcfsApplicationEnriched[]>([]);
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<FcfsStats | null>(null);
-  const [duplicateHandles, setDuplicateHandles] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filters, setFilters] = useState<FcfsApplicationFilters>({
-    page: 1,
-    pageSize: PAGE_SIZE,
-    sortBy: "submitted_at",
-    sortDir: "desc",
-    status: "all",
-  });
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [detail, setDetail] = useState<FcfsApplication | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState("");
   const [exporting, setExporting] = useState(false);
   const [approvingAll, setApprovingAll] = useState(false);
-  const [editWallet, setEditWallet] = useState("");
-  const [editHandle, setEditHandle] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkReason, setBulkReason] = useState<ManualReviewReason>("OTHER");
+  const [detail, setDetail] = useState<FcfsApplicationEnriched | null>(null);
+
+  const pageSize = filters.pageSize ?? 25;
 
   const loadApplications = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const [result, dupes] = await Promise.all([
-        fetchFcfsApplications(filters),
-        fetchDuplicateXHandles(),
-      ]);
+      const result = await fetchFcfsApplicationsEnriched(filters);
       setApplications(result.applications);
       setTotal(result.total);
-      setDuplicateHandles(dupes);
     } catch {
       setError("Failed to load FCFS applications.");
     } finally {
@@ -116,8 +79,7 @@ export default function AdminFcfsPage() {
 
   const loadStats = useCallback(async () => {
     try {
-      const data = await getFcfsStats();
-      setStats(data);
+      setStats(await getFcfsStats());
     } catch {
       setStats(null);
     }
@@ -136,25 +98,32 @@ export default function AdminFcfsPage() {
   }, [loadStats]);
 
   useEffect(() => {
-    if (!selectedId) {
+    if (!filters.selectedId) {
       setDetail(null);
-      setEditWallet("");
-      setEditHandle("");
       return;
     }
+    const match = applications.find((app) => app.id === filters.selectedId);
+    if (match) {
+      setDetail(match);
+    }
+  }, [applications, filters.selectedId]);
 
-    void fetchFcfsApplicationById(selectedId).then((app) => {
-      setDetail(app);
-      if (app) {
-        setEditWallet(app.wallet_address);
-        setEditHandle(app.x_handle);
-      }
-    });
-  }, [selectedId]);
+  const refresh = () => {
+    void loadApplications();
+    void loadStats();
+  };
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const openDetail = (application: FcfsApplicationEnriched) => {
+    setFilters((current) => ({ ...current, selectedId: application.id }));
+    setDetail(application);
+  };
 
-  const handleCopy = async (application: FcfsApplication) => {
+  const closeDetail = () => {
+    setFilters((current) => ({ ...current, selectedId: null }));
+    setDetail(null);
+  };
+
+  const handleCopy = async (application: FcfsApplicationEnriched) => {
     const ok = await copyToClipboard(application.wallet_address);
     if (ok) {
       setCopiedId(application.id);
@@ -162,38 +131,29 @@ export default function AdminFcfsPage() {
     }
   };
 
-  const handleStatusChange = async (status: FcfsApplicationStatus) => {
-    if (!detail) return;
-    if (!window.confirm(`Change status to "${fcfsStatusLabel(status)}"?`)) return;
-
-    const updated = await setFcfsApplicationStatus(detail.id, status);
-    setDetail(updated);
-    void loadApplications();
-    void loadStats();
-  };
-
-  const handleSaveNotes = async (notes: string) => {
-    if (!detail) return;
-    const updated = await updateFcfsApplication(detail.id, {
-      internal_notes: sanitizeNotes(notes),
+  const toggleSelected = (id: string) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
-    setDetail(updated);
   };
 
-  const handleSaveIdentity = async () => {
-    if (!detail) return;
-    try {
-      const updated = await updateFcfsWalletAndHandle(
-        detail.id,
-        editWallet,
-        editHandle,
-      );
-      setDetail(updated);
-      void loadApplications();
-      void loadStats();
-    } catch (err) {
-      window.alert(err instanceof Error ? err.message : "Update failed.");
+  const toggleSelectAll = () => {
+    if (selectedIds.size === applications.length) {
+      setSelectedIds(new Set());
+      return;
     }
+    setSelectedIds(new Set(applications.map((app) => app.id)));
+  };
+
+  const runBulkFlag = async (flagged: boolean) => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    await bulkSetFcfsManualReviewFlag(ids, flagged, flagged ? bulkReason : null);
+    setSelectedIds(new Set());
+    refresh();
   };
 
   const runApproveAll = async () => {
@@ -202,7 +162,6 @@ export default function AdminFcfsPage() {
       setExportMessage("No pending FCFS applications to approve.");
       return;
     }
-
     if (
       !window.confirm(
         `Approve all ${pending} pending FCFS application${pending === 1 ? "" : "s"}?`,
@@ -210,7 +169,6 @@ export default function AdminFcfsPage() {
     ) {
       return;
     }
-
     setApprovingAll(true);
     setExportMessage("");
     setError("");
@@ -221,11 +179,7 @@ export default function AdminFcfsPage() {
           ? "No pending FCFS applications to approve."
           : `Approved ${approved} application${approved === 1 ? "" : "s"}.`,
       );
-      if (selectedId && detail?.status === "pending") {
-        setDetail({ ...detail, status: "approved" });
-      }
-      void loadApplications();
-      void loadStats();
+      refresh();
     } catch {
       setError("Approve all failed. Please try again.");
     } finally {
@@ -233,15 +187,26 @@ export default function AdminFcfsPage() {
     }
   };
 
-  const runExport = async (kind: "all" | "approved") => {
+  const runExport = async (kind: "all" | "filtered" | "approved" | "flagged") => {
     setExporting(true);
     setExportMessage("");
     try {
-      const all = await fetchAllFcfsApplicationsForExport();
-      const csv =
-        kind === "approved" ? approvedWalletsToCsv(all) : fcfsApplicationsToCsv(all);
+      const exportFilters =
+        kind === "filtered" || kind === "flagged"
+          ? {
+              ...filters,
+              auditFilter:
+                kind === "flagged"
+                  ? ("flagged" as FcfsAuditFilter)
+                  : filters.auditFilter,
+              page: 1,
+            }
+          : { page: 1, pageSize: 100 };
+
+      const all = await fetchAllFcfsApplicationsForExport(exportFilters);
 
       if (kind === "approved") {
+        const csv = approvedWalletsToCsv(all);
         const approvedCount = all.filter((app) => app.status === "approved").length;
         if (approvedCount === 0) {
           setExportMessage("No approved wallets to export.");
@@ -257,7 +222,10 @@ export default function AdminFcfsPage() {
         return;
       }
 
-      downloadCsv(fcfsExportFilename("all"), csv);
+      downloadCsv(
+        fcfsExportFilename(kind === "all" ? "all" : "filtered"),
+        fcfsApplicationsToCsv(all),
+      );
       setExportMessage(`Exported ${all.length} applications.`);
     } catch {
       setExportMessage("Export failed.");
@@ -275,6 +243,9 @@ export default function AdminFcfsPage() {
             {stats
               ? `${stats.total} total · ${stats.pending} pending · ${stats.approved} approved · ${stats.rejected} rejected`
               : `${total} records matching filters`}
+          </p>
+          <p className="wl-admin__muted">
+            <Link to="/admin/fcfs/audit">Open FCFS Audit →</Link>
           </p>
         </div>
         <div className="wl-admin__header-actions">
@@ -300,6 +271,22 @@ export default function AdminFcfsPage() {
             type="button"
             className="wl-admin__btn wl-admin__btn--ghost"
             disabled={exporting}
+            onClick={() => void runExport("filtered")}
+          >
+            Export Current Filter
+          </button>
+          <button
+            type="button"
+            className="wl-admin__btn wl-admin__btn--ghost"
+            disabled={exporting}
+            onClick={() => void runExport("flagged")}
+          >
+            Export Flagged
+          </button>
+          <button
+            type="button"
+            className="wl-admin__btn wl-admin__btn--ghost"
+            disabled={exporting}
             onClick={() => void runExport("approved")}
           >
             Export Approved Wallets
@@ -314,9 +301,7 @@ export default function AdminFcfsPage() {
         </div>
       </div>
 
-      {exportMessage ? (
-        <p className="wl-admin__message">{exportMessage}</p>
-      ) : null}
+      {exportMessage ? <p className="wl-admin__message">{exportMessage}</p> : null}
 
       <div className="wl-admin__filters">
         <input
@@ -338,7 +323,7 @@ export default function AdminFcfsPage() {
           onChange={(event) =>
             setFilters((current) => ({
               ...current,
-              status: event.target.value as FcfsApplicationFilters["status"],
+              status: event.target.value as FcfsApplicationStatus | "all",
               page: 1,
             }))
           }
@@ -348,13 +333,98 @@ export default function AdminFcfsPage() {
           <option value="approved">Approved</option>
           <option value="rejected">Rejected</option>
         </select>
+        <select
+          className="wl-admin__field-input"
+          value={filters.auditFilter ?? "all"}
+          onChange={(event) =>
+            setFilters((current) => ({
+              ...current,
+              auditFilter: event.target.value as FcfsAuditFilter,
+              page: 1,
+              burstStart: null,
+              burstEnd: null,
+              xHandleNormalised: null,
+            }))
+          }
+        >
+          <option value="all">All audit filters</option>
+          <option value="flagged">Flagged for review</option>
+          <option value="no_flags">No flags</option>
+          <option value="manual_review">Manual review flag</option>
+          <option value="duplicate_x_handle">Duplicate X handle</option>
+          <option value="duplicate_wallet">Duplicate wallet</option>
+          <option value="invalid_wallet">Invalid wallet format</option>
+          <option value="malformed_x_handle">Malformed X handle</option>
+          <option value="submission_burst">Submission burst</option>
+        </select>
+        <select
+          className="wl-admin__field-input"
+          value={`${filters.sortBy ?? "submitted_at"}:${filters.sortDir ?? "desc"}`}
+          onChange={(event) => {
+            const [sortBy, sortDir] = event.target.value.split(":");
+            setFilters((current) => ({
+              ...current,
+              sortBy: sortBy as FcfsSortField,
+              sortDir: sortDir as "asc" | "desc",
+              page: 1,
+            }));
+          }}
+        >
+          <option value="submitted_at:desc">Submission — Newest First</option>
+          <option value="submitted_at:asc">Submission — Oldest First</option>
+          <option value="x_handle:asc">X Handle — A to Z</option>
+          <option value="x_handle:desc">X Handle — Z to A</option>
+          <option value="wallet:asc">Wallet — A to Z</option>
+          <option value="wallet:desc">Wallet — Z to A</option>
+          <option value="status:asc">Status</option>
+        </select>
       </div>
+
+      {selectedIds.size > 0 ? (
+        <div className="wl-admin__bulk-bar">
+          <span>{selectedIds.size} selected</span>
+          <select
+            className="wl-admin__field-input"
+            value={bulkReason}
+            onChange={(event) =>
+              setBulkReason(event.target.value as ManualReviewReason)
+            }
+          >
+            {REVIEW_REASONS.map((reason) => (
+              <option key={reason} value={reason}>
+                {reason}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="wl-admin__btn wl-admin__btn--ghost"
+            onClick={() => void runBulkFlag(true)}
+          >
+            Flag for Review
+          </button>
+          <button
+            type="button"
+            className="wl-admin__btn wl-admin__btn--ghost"
+            onClick={() => void runBulkFlag(false)}
+          >
+            Clear Review Flag
+          </button>
+        </div>
+      ) : null}
 
       {error ? (
         <p className="wl-admin__error" role="alert">
           {error}
         </p>
       ) : null}
+
+      <FcfsPagination
+        page={filters.page ?? 1}
+        pageSize={pageSize}
+        total={total}
+        onPageChange={(page) => setFilters((current) => ({ ...current, page }))}
+      />
 
       {loading ? (
         <p className="wl-admin__loading">Loading applications…</p>
@@ -363,8 +433,20 @@ export default function AdminFcfsPage() {
           <table className="wl-admin__table">
             <thead>
               <tr>
+                <th>
+                  <input
+                    type="checkbox"
+                    aria-label="Select all on page"
+                    checked={
+                      applications.length > 0 &&
+                      selectedIds.size === applications.length
+                    }
+                    onChange={toggleSelectAll}
+                  />
+                </th>
                 <th>X Handle</th>
                 <th>Wallet</th>
+                <th>Audit</th>
                 <th>Follow</th>
                 <th>Share</th>
                 <th>Submitted</th>
@@ -372,22 +454,34 @@ export default function AdminFcfsPage() {
               </tr>
             </thead>
             <tbody>
-              {applications.map((application) => {
-                const duplicateHandle = duplicateHandles.has(
-                  application.x_handle_normalised,
-                );
-
-                return (
+              {applications.length === 0 ? (
+                <tr>
+                  <td colSpan={8}>No applications found.</td>
+                </tr>
+              ) : (
+                applications.map((application) => (
                   <tr
                     key={application.id}
-                    className={selectedId === application.id ? "is-selected" : ""}
-                    onClick={() => setSelectedId(application.id)}
+                    className={
+                      filters.selectedId === application.id ? "is-selected" : ""
+                    }
+                    onClick={() => openDetail(application)}
                   >
                     <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(application.id)}
+                        aria-label={`Select ${application.x_handle}`}
+                        onClick={(event) => event.stopPropagation()}
+                        onChange={() => toggleSelected(application.id)}
+                      />
+                    </td>
+                    <td>
                       <XHandleLink handle={application.x_handle} />
-                      {duplicateHandle ? (
+                      {application.duplicate_x_handle_count > 1 ? (
                         <span className="wl-admin__badge wl-admin__badge--warn">
-                          duplicate handle
+                          X handle used by {application.duplicate_x_handle_count}{" "}
+                          wallets
                         </span>
                       ) : null}
                     </td>
@@ -399,6 +493,9 @@ export default function AdminFcfsPage() {
                           onCopy={() => void handleCopy(application)}
                         />
                       </span>
+                    </td>
+                    <td>
+                      <FcfsAuditFlags flags={application.audit_flags} />
                     </td>
                     <td>
                       {verificationStatus(
@@ -421,173 +518,28 @@ export default function AdminFcfsPage() {
                       </span>
                     </td>
                   </tr>
-                );
-              })}
+                ))
+              )}
             </tbody>
           </table>
         </div>
       )}
 
-      <div className="wl-admin__pagination">
-        <button
-          type="button"
-          className="wl-admin__btn wl-admin__btn--ghost"
-          disabled={(filters.page ?? 1) <= 1}
-          onClick={() =>
-            setFilters((current) => ({
-              ...current,
-              page: Math.max(1, (current.page ?? 1) - 1),
-            }))
-          }
-        >
-          Previous
-        </button>
-        <span className="wl-admin__pagination-label">
-          Page {filters.page ?? 1} of {totalPages}
-        </span>
-        <button
-          type="button"
-          className="wl-admin__btn wl-admin__btn--ghost"
-          disabled={(filters.page ?? 1) >= totalPages}
-          onClick={() =>
-            setFilters((current) => ({
-              ...current,
-              page: Math.min(totalPages, (current.page ?? 1) + 1),
-            }))
-          }
-        >
-          Next
-        </button>
-      </div>
+      <FcfsPagination
+        page={filters.page ?? 1}
+        pageSize={pageSize}
+        total={total}
+        onPageChange={(page) => setFilters((current) => ({ ...current, page }))}
+      />
 
       {detail ? (
-        <div
-          className="wl-admin__modal-backdrop"
-          role="presentation"
-          onClick={() => setSelectedId(null)}
-        >
-          <div
-            className="wl-admin__modal wl-admin__modal--wide"
-            role="dialog"
-            aria-labelledby="fcfs-detail-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h2 id="fcfs-detail-title" className="wl-admin__modal-title">
-              FCFS Application
-            </h2>
-
-            <dl className="wl-admin__detail-grid">
-              <div>
-                <dt>Status</dt>
-                <dd>{fcfsStatusLabel(detail.status)}</dd>
-              </div>
-              <div>
-                <dt>Submitted</dt>
-                <dd>{formatDateTime(detail.submitted_at)}</dd>
-              </div>
-              <div>
-                <dt>Follow</dt>
-                <dd>
-                  {verificationStatus(
-                    detail.follow_opened_at,
-                    detail.follow_confirmed_at,
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt>Share</dt>
-                <dd>
-                  {verificationStatus(
-                    detail.share_opened_at,
-                    detail.share_confirmed_at,
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt>Reviewed</dt>
-                <dd>{formatDateTime(detail.reviewed_at)}</dd>
-              </div>
-            </dl>
-
-            <label className="wl-admin__field-label" htmlFor="fcfs-edit-handle">
-              X handle
-            </label>
-            <input
-              id="fcfs-edit-handle"
-              className="wl-admin__field-input"
-              value={editHandle}
-              onChange={(event) => setEditHandle(event.target.value)}
-            />
-
-            <div className="wl-admin__field-label-row">
-              <label className="wl-admin__field-label" htmlFor="fcfs-edit-wallet">
-                Wallet address
-              </label>
-              <CopyWalletIconButton
-                copied={copiedId === detail.id}
-                onCopy={() => void handleCopy(detail)}
-              />
-            </div>
-            <input
-              id="fcfs-edit-wallet"
-              className="wl-admin__field-input"
-              value={editWallet}
-              onChange={(event) => setEditWallet(event.target.value)}
-            />
-
-            <div className="wl-admin__modal-actions wl-admin__modal-actions--left">
-              <button
-                type="button"
-                className="wl-admin__btn wl-admin__btn--ghost"
-                onClick={() => void handleSaveIdentity()}
-              >
-                Save Handle / Wallet
-              </button>
-            </div>
-
-            <label className="wl-admin__field-label" htmlFor="fcfs-detail-notes">
-              Internal notes
-            </label>
-            <textarea
-              id="fcfs-detail-notes"
-              className="wl-admin__field-textarea"
-              rows={4}
-              defaultValue={detail.internal_notes ?? ""}
-              onBlur={(event) => void handleSaveNotes(event.target.value)}
-            />
-
-            <div className="wl-admin__modal-actions">
-              <button
-                type="button"
-                className="wl-admin__btn wl-admin__btn--ghost"
-                onClick={() => setSelectedId(null)}
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                className="wl-admin__btn wl-admin__btn--primary"
-                onClick={() => void handleStatusChange("approved")}
-              >
-                Approve
-              </button>
-              <button
-                type="button"
-                className="wl-admin__btn wl-admin__btn--ghost"
-                onClick={() => void handleStatusChange("rejected")}
-              >
-                Reject
-              </button>
-              <button
-                type="button"
-                className="wl-admin__btn wl-admin__btn--ghost"
-                onClick={() => void handleStatusChange("pending")}
-              >
-                Return to Pending
-              </button>
-            </div>
-          </div>
-        </div>
+        <FcfsApplicationDetailModal
+          detail={detail}
+          copied={copiedId === detail.id}
+          onClose={closeDetail}
+          onCopyWallet={() => void handleCopy(detail)}
+          onUpdated={refresh}
+        />
       ) : null}
 
       {showAdd ? (
@@ -595,12 +547,18 @@ export default function AdminFcfsPage() {
           onClose={() => setShowAdd(false)}
           onCreated={() => {
             setShowAdd(false);
-            void loadApplications();
-            void loadStats();
+            refresh();
           }}
           onDuplicate={(application) => {
             setShowAdd(false);
-            setSelectedId(application.id);
+            openDetail({
+              ...application,
+              audit_flags: [],
+              duplicate_x_handle_count: 1,
+              same_burst_count: 0,
+              manual_review_flag: application.manual_review_flag ?? false,
+              manual_review_reason: application.manual_review_reason ?? null,
+            });
           }}
         />
       ) : null}

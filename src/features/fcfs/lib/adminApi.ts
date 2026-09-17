@@ -7,14 +7,44 @@ import {
 } from "../../whitelist/lib/wallet";
 import type {
   FcfsApplication,
+  FcfsApplicationEnriched,
   FcfsApplicationFilters,
   FcfsApplicationStatus,
+  FcfsAuditFlag,
+  FcfsAuditSummary,
+  FcfsBurstWindow,
+  FcfsRelatedCounts,
   FcfsStats,
+  FcfsTimelinePeriod,
   ManualFcfsInput,
+  ManualReviewReason,
 } from "./types";
 import { formatXHandleDisplay, normaliseXHandle, validateXHandleInput } from "./xHandle";
 
 export { copyToClipboard };
+
+function normalizeFcfsApplication(row: Record<string, unknown>): FcfsApplication {
+  const application = row as unknown as FcfsApplication;
+  return {
+    ...application,
+    manual_review_flag: Boolean(row.manual_review_flag ?? false),
+    manual_review_reason: (row.manual_review_reason as string | null) ?? null,
+  };
+}
+
+function mapEnrichedRow(row: {
+  application: Record<string, unknown>;
+  audit_flags?: FcfsAuditFlag[];
+  duplicate_x_handle_count?: number;
+  same_burst_count?: number;
+}): FcfsApplicationEnriched {
+  return {
+    ...normalizeFcfsApplication(row.application),
+    audit_flags: row.audit_flags ?? [],
+    duplicate_x_handle_count: row.duplicate_x_handle_count ?? 1,
+    same_burst_count: row.same_burst_count ?? 0,
+  };
+}
 
 export async function getFcfsStats(): Promise<FcfsStats> {
   const supabase = getSupabase();
@@ -30,40 +60,96 @@ export async function fetchDuplicateXHandles(): Promise<Set<string>> {
   return new Set((data ?? []) as string[]);
 }
 
+function resolveAuditFilter(filters: FcfsApplicationFilters): string {
+  return filters.auditFilter ?? "all";
+}
+
+export async function fetchFcfsApplicationsEnriched(
+  filters: FcfsApplicationFilters = {},
+): Promise<{ applications: FcfsApplicationEnriched[]; total: number }> {
+  const supabase = getSupabase();
+  const auditFilter = resolveAuditFilter(filters);
+
+  const { data, error } = await supabase.rpc("admin_fcfs_list", {
+    p_page: filters.page ?? 1,
+    p_page_size: filters.pageSize ?? 25,
+    p_search: filters.search?.trim() || null,
+    p_status: filters.status ?? "all",
+    p_sort: filters.sortBy ?? "submitted_at",
+    p_sort_dir: filters.sortDir ?? "desc",
+    p_audit_filter: auditFilter,
+    p_burst_start: filters.burstStart ?? null,
+    p_burst_end: filters.burstEnd ?? null,
+    p_x_handle_normalised: filters.xHandleNormalised ?? null,
+  });
+
+  if (error) throw error;
+
+  const payload = data as {
+    applications?: Array<{
+      application: Record<string, unknown>;
+      audit_flags?: FcfsAuditFlag[];
+      duplicate_x_handle_count?: number;
+      same_burst_count?: number;
+    }>;
+    total?: number;
+  };
+
+  return {
+    applications: (payload.applications ?? []).map(mapEnrichedRow),
+    total: payload.total ?? 0,
+  };
+}
+
 export async function fetchFcfsApplications(
   filters: FcfsApplicationFilters = {},
 ): Promise<{ applications: FcfsApplication[]; total: number }> {
-  const supabase = getSupabase();
-  const page = filters.page ?? 1;
-  const pageSize = filters.pageSize ?? 25;
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-
-  let query = supabase.from("fcfs_applications").select("*", { count: "exact" });
-
-  if (filters.search?.trim()) {
-    const term = filters.search.trim().toLowerCase().replace(/^@+/, "");
-    query = query.or(
-      `wallet_address_normalised.ilike.%${term}%,x_handle_normalised.ilike.%${term}%`,
-    );
-  }
-
-  if (filters.status && filters.status !== "all") {
-    query = query.eq("status", filters.status);
-  }
-
-  const sortBy = filters.sortBy ?? "submitted_at";
-  const ascending = filters.sortDir === "asc";
-  query = query.order(sortBy, { ascending, nullsFirst: false });
-  query = query.range(from, to);
-
-  const { data, error, count } = await query;
-  if (error) throw error;
-
+  const result = await fetchFcfsApplicationsEnriched(filters);
   return {
-    applications: (data ?? []) as FcfsApplication[],
-    total: count ?? 0,
+    applications: result.applications,
+    total: result.total,
   };
+}
+
+export async function getFcfsAuditSummary(): Promise<FcfsAuditSummary> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.rpc("admin_fcfs_audit_summary");
+  if (error) throw error;
+  return data as FcfsAuditSummary;
+}
+
+export async function fetchFcfsBurstWindows(): Promise<FcfsBurstWindow[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.rpc("admin_fcfs_burst_buckets", {
+    p_window_minutes: 2,
+    p_min_count: 5,
+  });
+  if (error) throw error;
+  return (data ?? []) as FcfsBurstWindow[];
+}
+
+export async function fetchFcfsSubmissionTimeline(
+  granularity: "day" | "hour" | "minute" = "hour",
+): Promise<FcfsTimelinePeriod[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.rpc("admin_fcfs_submission_timeline", {
+    p_granularity: granularity,
+  });
+  if (error) throw error;
+  const payload = data as { periods?: FcfsTimelinePeriod[] };
+  return payload.periods ?? [];
+}
+
+export async function fetchFcfsRelatedCounts(
+  applicationId: string,
+): Promise<FcfsRelatedCounts | null> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.rpc("admin_fcfs_related_counts", {
+    p_application_id: applicationId,
+  });
+  if (error) throw error;
+  if (!data || Object.keys(data as object).length === 0) return null;
+  return data as FcfsRelatedCounts;
 }
 
 export async function fetchFcfsApplicationById(
@@ -77,7 +163,7 @@ export async function fetchFcfsApplicationById(
     .maybeSingle();
 
   if (error) throw error;
-  return data as FcfsApplication | null;
+  return data ? normalizeFcfsApplication(data as Record<string, unknown>) : null;
 }
 
 export async function fetchFcfsApplicationByWallet(
@@ -91,29 +177,27 @@ export async function fetchFcfsApplicationByWallet(
     .maybeSingle();
 
   if (error) throw error;
-  return data as FcfsApplication | null;
+  return data ? normalizeFcfsApplication(data as Record<string, unknown>) : null;
 }
 
-export async function fetchAllFcfsApplicationsForExport(): Promise<FcfsApplication[]> {
-  const supabase = getSupabase();
-  const all: FcfsApplication[] = [];
-  const pageSize = 1000;
-  let from = 0;
+export async function fetchAllFcfsApplicationsForExport(
+  filters: FcfsApplicationFilters = {},
+): Promise<FcfsApplicationEnriched[]> {
+  const all: FcfsApplicationEnriched[] = [];
+  const pageSize = 100;
+  let page = 1;
+  let total = 0;
 
-  while (true) {
-    const { data, error } = await supabase
-      .from("fcfs_applications")
-      .select("*")
-      .order("submitted_at", { ascending: true })
-      .range(from, from + pageSize - 1);
-
-    if (error) throw error;
-    if (!data?.length) break;
-
-    all.push(...(data as FcfsApplication[]));
-    if (data.length < pageSize) break;
-    from += pageSize;
-  }
+  do {
+    const result = await fetchFcfsApplicationsEnriched({
+      ...filters,
+      page,
+      pageSize,
+    });
+    all.push(...result.applications);
+    total = result.total;
+    page += 1;
+  } while (all.length < total);
 
   return all;
 }
@@ -193,7 +277,10 @@ export async function createFcfsApplicationManual(
     status: data.status,
   });
 
-  return { application: data as FcfsApplication, duplicate: false };
+  return {
+    application: normalizeFcfsApplication(data as Record<string, unknown>),
+    duplicate: false,
+  };
 }
 
 export async function updateFcfsApplication(
@@ -213,6 +300,8 @@ export async function updateFcfsApplication(
       | "share_confirmed_at"
       | "reviewed_at"
       | "reviewed_by"
+      | "manual_review_flag"
+      | "manual_review_reason"
     >
   >,
   auditType = "fcfs_application_edited",
@@ -245,7 +334,54 @@ export async function updateFcfsApplication(
     after: { status: data.status, x_handle: data.x_handle },
   });
 
-  return data as FcfsApplication;
+  return normalizeFcfsApplication(data as Record<string, unknown>);
+}
+
+export async function setFcfsManualReviewFlag(
+  id: string,
+  flagged: boolean,
+  reason: ManualReviewReason | string | null = null,
+): Promise<FcfsApplication> {
+  return updateFcfsApplication(
+    id,
+    {
+      manual_review_flag: flagged,
+      manual_review_reason: flagged ? reason : null,
+    },
+    flagged ? "fcfs_manual_review_flagged" : "fcfs_manual_review_cleared",
+  );
+}
+
+export async function bulkSetFcfsManualReviewFlag(
+  ids: string[],
+  flagged: boolean,
+  reason: ManualReviewReason | string | null = null,
+): Promise<number> {
+  if (ids.length === 0) return 0;
+
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("fcfs_applications")
+    .update({
+      manual_review_flag: flagged,
+      manual_review_reason: flagged ? reason : null,
+    })
+    .in("id", ids)
+    .select("id");
+
+  if (error) throw error;
+
+  const updated = data?.length ?? 0;
+  if (updated > 0 && data?.[0]?.id) {
+    await logFcfsAudit(
+      flagged ? "fcfs_bulk_manual_review_flagged" : "fcfs_bulk_manual_review_cleared",
+      data[0].id,
+      "",
+      { updated, reason: flagged ? reason : null },
+    );
+  }
+
+  return updated;
 }
 
 export async function countPendingFcfsApplications(): Promise<number> {

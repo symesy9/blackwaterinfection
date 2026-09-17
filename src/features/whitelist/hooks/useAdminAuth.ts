@@ -56,7 +56,19 @@ export function useAdminAuth() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Token refresh on tab focus must not unmount admin routes / reset page state.
+      if (event === "TOKEN_REFRESHED") {
+        if (session) {
+          setState((prev) => ({
+            ...prev,
+            session,
+            user: session.user,
+          }));
+        }
+        return;
+      }
+
       setState((prev) => ({ ...prev, loading: true }));
       void refreshAdmin(session);
     });
