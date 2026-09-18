@@ -1,5 +1,9 @@
 import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
+import {
+  burstWindowsToParam,
+  parseBurstWindowsParam,
+} from "../../clearance/lib/selection";
 import { isBurstInvestigationView } from "../lib/audit";
 import type {
   FcfsApplicationFilters,
@@ -110,6 +114,7 @@ export function parseFcfsFiltersFromSearchParams(
     sortDir: params.get("direction") === "asc" ? "asc" : "desc",
     burstStart: params.get("burstStart"),
     burstEnd: params.get("burstEnd"),
+    burstWindows: parseBurstWindowsParam(params.get("bursts")),
     xHandleNormalised: params.get("xHandle"),
     selectedId: params.get("id"),
     hideBursts: parseHideBursts(params),
@@ -142,11 +147,16 @@ export function fcfsFiltersToSearchParams(
   if (filters.sortDir === "asc") {
     params.set("direction", "asc");
   }
-  if (filters.burstStart) {
-    params.set("burstStart", filters.burstStart);
-  }
-  if (filters.burstEnd) {
-    params.set("burstEnd", filters.burstEnd);
+  if (filters.burstWindows && filters.burstWindows.length > 0) {
+    const bursts = burstWindowsToParam(filters.burstWindows);
+    if (bursts) params.set("bursts", bursts);
+  } else {
+    if (filters.burstStart) {
+      params.set("burstStart", filters.burstStart);
+    }
+    if (filters.burstEnd) {
+      params.set("burstEnd", filters.burstEnd);
+    }
   }
   if (filters.xHandleNormalised) {
     params.set("xHandle", filters.xHandleNormalised);

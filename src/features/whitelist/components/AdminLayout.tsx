@@ -5,14 +5,15 @@ import { useAdminAuth } from "../hooks/useAdminAuth";
 import AdminLogoMark from "./AdminLogoMark";
 
 const NAV = [
-  { to: "/admin", label: "Dashboard", end: true },
-  { to: "/admin/wallets", label: "WL Applications", end: false },
-  { to: "/admin/fcfs", label: "FCFS Applications", end: true },
-  { to: "/admin/fcfs/audit", label: "FCFS Audit", end: false },
-  { to: "/admin/fcfs/wallet-audit", label: "Wallet Audit", end: false },
+  { to: "/admin/clearance", label: "Overview", end: true },
+  { to: "/admin/clearance/whitelist", label: "Whitelist", end: false },
+  { to: "/admin/clearance/fcfs", label: "FCFS", end: true },
+  { to: "/admin/clearance/cross-list", label: "Cross-List Audit", end: false },
+  { to: "/admin/clearance/burst-audit", label: "Burst Audit", end: false },
+  { to: "/admin/clearance/wallet-audit", label: "Wallet Audit", end: false },
   { to: "/admin/import", label: "Import", end: false },
+  { to: "/admin/clearance/export", label: "Export", end: false },
   { to: "/admin/audit", label: "Audit Log", end: false },
-  { to: "/admin/export", label: "Export", end: false },
 ];
 
 function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {

@@ -11,6 +11,7 @@ export default defineConfig({
       "src/features/whitelist/**/*.test.ts",
       "src/features/fcfs/**/*.test.ts",
       "src/features/wallet-checker/**/*.test.ts",
+      "src/features/clearance/**/*.test.ts",
     ],
   },
 });

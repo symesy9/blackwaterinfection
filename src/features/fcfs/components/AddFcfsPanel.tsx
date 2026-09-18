@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
+import { fetchFcfsPreInsertAudit, createFcfsManualRpc } from "../../clearance/lib/adminApi";
+import type { FcfsPreInsertAudit } from "../../clearance/lib/types";
 import { sanitizeNotes } from "../../whitelist/lib/sanitize";
 import { validateWalletInput } from "../../whitelist/lib/wallet";
-import { createFcfsApplicationManual } from "../lib/adminApi";
 import type { FcfsApplication, FcfsApplicationStatus } from "../lib/types";
 import { validateXHandleInput } from "../lib/xHandle";
 
@@ -14,46 +15,63 @@ interface AddFcfsPanelProps {
 export default function AddFcfsPanel({
   onClose,
   onCreated,
-  onDuplicate,
 }: AddFcfsPanelProps) {
   const [wallet, setWallet] = useState("");
   const [xHandle, setXHandle] = useState("");
   const [status, setStatus] = useState<FcfsApplicationStatus>("pending");
   const [notes, setNotes] = useState("");
+  const [audit, setAudit] = useState<FcfsPreInsertAudit | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const onSubmit = async (event: FormEvent) => {
-    event.preventDefault();
+  const runAudit = async () => {
     setError("");
-
     const walletValidation = validateWalletInput(wallet);
     if (!walletValidation.valid) {
       setError(walletValidation.error ?? "Invalid wallet.");
+      setAudit(null);
       return;
     }
-
     const handleValidation = validateXHandleInput(xHandle);
     if (!handleValidation.valid) {
       setError(handleValidation.error ?? "Invalid X handle.");
+      setAudit(null);
       return;
     }
-
     setSubmitting(true);
     try {
-      const result = await createFcfsApplicationManual({
-        wallet_address: wallet,
-        x_handle: xHandle,
-        status,
-        internal_notes: sanitizeNotes(notes) || undefined,
-      });
+      setAudit(await fetchFcfsPreInsertAudit(wallet, xHandle));
+    } catch {
+      setError("Pre-insert audit failed.");
+      setAudit(null);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-      if (result.duplicate && result.application) {
-        setError("This wallet already has an FCFS application.");
-        onDuplicate(result.application);
+  const onSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!audit?.can_insert) {
+      await runAudit();
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    try {
+      const result = await createFcfsManualRpc({
+        wallet,
+        xHandle,
+        status,
+        notes: sanitizeNotes(notes) || null,
+      });
+      if (result.outcome === "blocked") {
+        setError("Insertion blocked by duplicate protection.");
         return;
       }
-
+      if (result.outcome !== "ok") {
+        setError("Failed to add FCFS application.");
+        return;
+      }
       onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add application.");
@@ -82,7 +100,10 @@ export default function AddFcfsPanel({
           id="add-fcfs-wallet"
           className="wl-admin__field-input"
           value={wallet}
-          onChange={(event) => setWallet(event.target.value)}
+          onChange={(event) => {
+            setWallet(event.target.value);
+            setAudit(null);
+          }}
           required
         />
 
@@ -93,7 +114,10 @@ export default function AddFcfsPanel({
           id="add-fcfs-handle"
           className="wl-admin__field-input"
           value={xHandle}
-          onChange={(event) => setXHandle(event.target.value)}
+          onChange={(event) => {
+            setXHandle(event.target.value);
+            setAudit(null);
+          }}
           placeholder="@username"
           required
         />
@@ -125,6 +149,34 @@ export default function AddFcfsPanel({
           onChange={(event) => setNotes(event.target.value)}
         />
 
+        <button
+          type="button"
+          className="wl-admin__btn wl-admin__btn--ghost"
+          disabled={submitting}
+          onClick={() => void runAudit()}
+        >
+          Run pre-insert audit
+        </button>
+
+        {audit ? (
+          <div className="wl-admin__card">
+            <p>
+              WL: <strong>{audit.whitelist?.exists ? "YES" : "NO"}</strong>
+            </p>
+            <p>
+              FCFS wallet:{" "}
+              <strong>{audit.fcfs_wallet?.exists ? "ALREADY EXISTS" : "NOT FOUND"}</strong>
+            </p>
+            <p>
+              FCFS handle:{" "}
+              <strong>{audit.fcfs_handle?.exists ? "ALREADY USED" : "NOT FOUND"}</strong>
+            </p>
+            {audit.crossover?.valid_crossover ? (
+              <p className="wl-admin__badge">VALID WL + FCFS CROSSOVER</p>
+            ) : null}
+          </div>
+        ) : null}
+
         {error ? (
           <p className="wl-admin__error" role="alert">
             {error}
@@ -142,9 +194,9 @@ export default function AddFcfsPanel({
           <button
             type="submit"
             className="wl-admin__btn wl-admin__btn--primary"
-            disabled={submitting}
+            disabled={submitting || audit?.can_insert === false}
           >
-            {submitting ? "Adding…" : "Add Application"}
+            {submitting ? "Adding…" : audit?.can_insert ? "Add Application" : "Audit first"}
           </button>
         </div>
       </form>

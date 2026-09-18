@@ -77,6 +77,7 @@ export interface FcfsApplicationFilters {
   pageSize?: number;
   burstStart?: string | null;
   burstEnd?: string | null;
+  burstWindows?: Array<{ start: string; end: string }>;
   xHandleNormalised?: string | null;
   selectedId?: string | null;
   hideBursts?: boolean;

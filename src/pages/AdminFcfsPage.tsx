@@ -13,9 +13,19 @@ import {
   fcfsApplicationsToCsv,
   fcfsExportFilename,
 } from "../features/fcfs/lib/csv";
+import BulkDeleteConfirmModal from "../features/clearance/components/BulkDeleteConfirmModal";
+import BulkSelectionBar from "../features/clearance/components/BulkSelectionBar";
+import {
+  fcfsBulkAction,
+  fcfsFilterSnapshot,
+  fetchFcfsSelectionCount,
+} from "../features/clearance/lib/adminApi";
+import { formatSelectionChangedMessage } from "../features/clearance/lib/bulkDeleteSafety";
+import { buildFcfsSelectionPayload } from "../features/clearance/lib/selection";
+import { useBulkSelection } from "../features/clearance/hooks/useBulkSelection";
+import type { FcfsBulkOperation } from "../features/clearance/lib/types";
 import {
   approveAllPendingFcfsApplications,
-  bulkSetFcfsManualReviewFlag,
   copyToClipboard,
   fetchAllFcfsApplicationsForExport,
   fetchFcfsApplicationsEnriched,
@@ -58,11 +68,26 @@ export default function AdminFcfsPage() {
   const [exportMessage, setExportMessage] = useState("");
   const [exporting, setExporting] = useState(false);
   const [approvingAll, setApprovingAll] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkReason, setBulkReason] = useState<ManualReviewReason>("OTHER");
   const [detail, setDetail] = useState<FcfsApplicationEnriched | null>(null);
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
+  const [deleteCount, setDeleteCount] = useState(0);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const pageSize = filters.pageSize ?? 25;
+  const pageIds = applications.map((app) => app.id);
+  const filterSnapshot = fcfsFilterSnapshot(filters);
+  const {
+    selection,
+    count: selectedCount,
+    toggle,
+    selectCurrentPage,
+    selectMatching,
+    clear: clearSelection,
+    rowSelected,
+    allPageSelected,
+    mode: selectionMode,
+  } = useBulkSelection(pageIds, total, filterSnapshot);
 
   const loadApplications = useCallback(async () => {
     setLoading(true);
@@ -134,29 +159,68 @@ export default function AdminFcfsPage() {
     }
   };
 
-  const toggleSelected = (id: string) => {
-    setSelectedIds((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const resolveSelectionCount = async (): Promise<number> => {
+    if (selectionMode === "all_matching") {
+      return fetchFcfsSelectionCount(filters, [...selection.excludedIds]);
+    }
+    return selectedCount;
   };
 
-  const toggleSelectAll = () => {
-    if (selectedIds.size === applications.length) {
-      setSelectedIds(new Set());
+  const runBulkOperation = async (operation: FcfsBulkOperation) => {
+    if (selectedCount === 0) return;
+    setBulkBusy(true);
+    setError("");
+    try {
+      const effectiveCount = await resolveSelectionCount();
+      const payload = buildFcfsSelectionPayload(selection, effectiveCount);
+      const result = await fcfsBulkAction(operation, filters, {
+        selectionMode: payload.selectionMode,
+        ids: payload.ids ?? undefined,
+        excludeIds: payload.excludeIds,
+        expectedCount: operation === "delete" ? effectiveCount : undefined,
+        manualReviewReason: bulkReason,
+        selectionLabel: `FCFS ${operation}`,
+      });
+      if (result.outcome === "count_changed") {
+        setError(
+          formatSelectionChangedMessage(
+            result.expected ?? effectiveCount,
+            result.current ?? effectiveCount,
+          ),
+        );
+        return;
+      }
+      if (result.outcome !== "ok") {
+        setError(`Bulk ${operation} failed.`);
+        return;
+      }
+      clearSelection();
+      refresh();
+    } catch {
+      setError(`Bulk ${operation} failed.`);
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
+  const openBulkDelete = async () => {
+    try {
+      setDeleteCount(await resolveSelectionCount());
+      setShowBulkDelete(true);
+    } catch {
+      setError("Could not verify delete count.");
+    }
+  };
+
+  const confirmBulkDelete = async () => {
+    const serverCount = await resolveSelectionCount();
+    if (serverCount !== deleteCount) {
+      setError(formatSelectionChangedMessage(deleteCount, serverCount));
+      setShowBulkDelete(false);
       return;
     }
-    setSelectedIds(new Set(applications.map((app) => app.id)));
-  };
-
-  const runBulkFlag = async (flagged: boolean) => {
-    const ids = [...selectedIds];
-    if (ids.length === 0) return;
-    await bulkSetFcfsManualReviewFlag(ids, flagged, flagged ? bulkReason : null);
-    setSelectedIds(new Set());
-    refresh();
+    await runBulkOperation("delete");
+    setShowBulkDelete(false);
   };
 
   const runApproveAll = async () => {
@@ -248,9 +312,11 @@ export default function AdminFcfsPage() {
               : `${total} records matching filters`}
           </p>
           <p className="wl-admin__muted">
-            <Link to="/admin/fcfs/audit">Open FCFS Audit →</Link>
+            <Link to="/admin/clearance">← Clearance Overview</Link>
             {" · "}
-            <Link to="/admin/fcfs/wallet-audit">Wallet Audit →</Link>
+            <Link to="/admin/clearance/burst-audit">Burst Audit →</Link>
+            {" · "}
+            <Link to="/admin/clearance/wallet-audit">Wallet Audit →</Link>
           </p>
         </div>
         <div className="wl-admin__header-actions">
@@ -409,38 +475,99 @@ export default function AdminFcfsPage() {
         ) : null}
       </div>
 
-      {selectedIds.size > 0 ? (
+      {filters.burstStart && filters.burstEnd ? (
         <div className="wl-admin__bulk-bar">
-          <span>{selectedIds.size} selected</span>
-          <select
-            className="wl-admin__field-input"
-            value={bulkReason}
-            onChange={(event) =>
-              setBulkReason(event.target.value as ManualReviewReason)
-            }
-          >
-            {REVIEW_REASONS.map((reason) => (
-              <option key={reason} value={reason}>
-                {reason}
-              </option>
-            ))}
-          </select>
+          <span>
+            Burst {formatDateTime(filters.burstStart)} —{" "}
+            {formatDateTime(filters.burstEnd)} · {total.toLocaleString()}{" "}
+            applications
+          </span>
           <button
             type="button"
             className="wl-admin__btn wl-admin__btn--ghost"
-            onClick={() => void runBulkFlag(true)}
+            onClick={() => selectMatching()}
           >
-            Flag for Review
-          </button>
-          <button
-            type="button"
-            className="wl-admin__btn wl-admin__btn--ghost"
-            onClick={() => void runBulkFlag(false)}
-          >
-            Clear Review Flag
+            Select entire burst
           </button>
         </div>
       ) : null}
+
+      <BulkSelectionBar
+        entityLabel="applications"
+        pageCount={pageIds.length}
+        matchingTotal={total}
+        selectedCount={selectedCount}
+        mode={selectionMode}
+        onSelectPage={selectCurrentPage}
+        onSelectAllMatching={selectMatching}
+        onClear={clearSelection}
+      >
+        {selectedCount > 0 ? (
+          <>
+            <select
+              className="wl-admin__field-input"
+              value={bulkReason}
+              onChange={(event) =>
+                setBulkReason(event.target.value as ManualReviewReason)
+              }
+            >
+              {REVIEW_REASONS.map((reason) => (
+                <option key={reason} value={reason}>
+                  {reason}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="wl-admin__btn wl-admin__btn--ghost"
+              disabled={bulkBusy}
+              onClick={() => void runBulkOperation("flag_review")}
+            >
+              Flag for Review
+            </button>
+            <button
+              type="button"
+              className="wl-admin__btn wl-admin__btn--ghost"
+              disabled={bulkBusy}
+              onClick={() => void runBulkOperation("clear_review")}
+            >
+              Clear Review Flag
+            </button>
+            <button
+              type="button"
+              className="wl-admin__btn wl-admin__btn--ghost"
+              disabled={bulkBusy}
+              onClick={() => void runBulkOperation("approve")}
+            >
+              Approve
+            </button>
+            <button
+              type="button"
+              className="wl-admin__btn wl-admin__btn--ghost"
+              disabled={bulkBusy}
+              onClick={() => void runBulkOperation("reject")}
+            >
+              Reject
+            </button>
+            <button
+              type="button"
+              className="wl-admin__btn wl-admin__btn--ghost"
+              disabled={bulkBusy}
+              onClick={() => void runBulkOperation("pending")}
+            >
+              Return to Pending
+            </button>
+            <button
+              type="button"
+              className="wl-admin__btn wl-admin__btn--danger"
+              disabled={bulkBusy}
+              onClick={() => void openBulkDelete()}
+            >
+              Delete
+            </button>
+          </>
+        ) : null}
+      </BulkSelectionBar>
 
       {error ? (
         <p className="wl-admin__error" role="alert">
@@ -466,11 +593,11 @@ export default function AdminFcfsPage() {
                   <input
                     type="checkbox"
                     aria-label="Select all on page"
-                    checked={
-                      applications.length > 0 &&
-                      selectedIds.size === applications.length
-                    }
-                    onChange={toggleSelectAll}
+                    checked={allPageSelected && applications.length > 0}
+                    onChange={() => {
+                      if (allPageSelected) clearSelection();
+                      else selectCurrentPage();
+                    }}
                   />
                 </th>
                 <th>X Handle</th>
@@ -499,10 +626,10 @@ export default function AdminFcfsPage() {
                     <td>
                       <input
                         type="checkbox"
-                        checked={selectedIds.has(application.id)}
+                        checked={rowSelected(application.id)}
                         aria-label={`Select ${application.x_handle}`}
                         onClick={(event) => event.stopPropagation()}
-                        onChange={() => toggleSelected(application.id)}
+                        onChange={() => toggle(application.id)}
                       />
                     </td>
                     <td>
@@ -568,6 +695,16 @@ export default function AdminFcfsPage() {
           onClose={closeDetail}
           onCopyWallet={() => void handleCopy(detail)}
           onUpdated={refresh}
+        />
+      ) : null}
+
+      {showBulkDelete ? (
+        <BulkDeleteConfirmModal
+          title="Delete FCFS applications"
+          count={deleteCount}
+          filterDescription={filters.auditFilter ?? "current selection"}
+          onCancel={() => setShowBulkDelete(false)}
+          onConfirm={confirmBulkDelete}
         />
       ) : null}
 

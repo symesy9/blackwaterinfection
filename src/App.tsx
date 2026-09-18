@@ -21,11 +21,22 @@ const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 const AdminWalletsPage = lazy(() => import("./pages/AdminWalletsPage"));
 const AdminImportPage = lazy(() => import("./pages/AdminImportPage"));
 const AdminAuditPage = lazy(() => import("./pages/AdminAuditPage"));
-const AdminExportPage = lazy(() => import("./pages/AdminExportPage"));
 const AdminFcfsPage = lazy(() => import("./pages/AdminFcfsPage"));
 const AdminFcfsAuditPage = lazy(() => import("./pages/AdminFcfsAuditPage"));
 const AdminFcfsWalletAuditPage = lazy(
   () => import("./pages/AdminFcfsWalletAuditPage"),
+);
+const AdminClearanceOverviewPage = lazy(
+  () => import("./pages/AdminClearanceOverviewPage"),
+);
+const AdminClearanceCrossListPage = lazy(
+  () => import("./pages/AdminClearanceCrossListPage"),
+);
+const AdminClearanceExportPage = lazy(
+  () => import("./pages/AdminClearanceExportPage"),
+);
+const AdminClearanceBurstAuditPage = lazy(
+  () => import("./pages/AdminClearanceBurstAuditPage"),
 );
 
 function AdminFallback() {
@@ -87,6 +98,66 @@ export default function App() {
           >
             <Route
               index
+              element={<Navigate to="/admin/clearance" replace />}
+            />
+            <Route
+              path="clearance"
+              element={
+                <Suspense fallback={<AdminFallback />}>
+                  <AdminClearanceOverviewPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="clearance/whitelist"
+              element={
+                <Suspense fallback={<AdminFallback />}>
+                  <AdminWalletsPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="clearance/fcfs"
+              element={
+                <Suspense fallback={<AdminFallback />}>
+                  <AdminFcfsPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="clearance/cross-list"
+              element={
+                <Suspense fallback={<AdminFallback />}>
+                  <AdminClearanceCrossListPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="clearance/burst-audit"
+              element={
+                <Suspense fallback={<AdminFallback />}>
+                  <AdminClearanceBurstAuditPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="clearance/wallet-audit"
+              element={
+                <Suspense fallback={<AdminFallback />}>
+                  <AdminFcfsWalletAuditPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="clearance/export"
+              element={
+                <Suspense fallback={<AdminFallback />}>
+                  <AdminClearanceExportPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="dashboard"
               element={
                 <Suspense fallback={<AdminFallback />}>
                   <AdminDashboardPage />
@@ -95,11 +166,7 @@ export default function App() {
             />
             <Route
               path="wallets"
-              element={
-                <Suspense fallback={<AdminFallback />}>
-                  <AdminWalletsPage />
-                </Suspense>
-              }
+              element={<Navigate to="/admin/clearance/whitelist" replace />}
             />
             <Route
               path="import"
@@ -119,19 +186,11 @@ export default function App() {
             />
             <Route
               path="export"
-              element={
-                <Suspense fallback={<AdminFallback />}>
-                  <AdminExportPage />
-                </Suspense>
-              }
+              element={<Navigate to="/admin/clearance/export" replace />}
             />
             <Route
               path="fcfs"
-              element={
-                <Suspense fallback={<AdminFallback />}>
-                  <AdminFcfsPage />
-                </Suspense>
-              }
+              element={<Navigate to="/admin/clearance/fcfs" replace />}
             />
             <Route
               path="fcfs/audit"
@@ -143,11 +202,7 @@ export default function App() {
             />
             <Route
               path="fcfs/wallet-audit"
-              element={
-                <Suspense fallback={<AdminFallback />}>
-                  <AdminFcfsWalletAuditPage />
-                </Suspense>
-              }
+              element={<Navigate to="/admin/clearance/wallet-audit" replace />}
             />
           </Route>
         </Route>

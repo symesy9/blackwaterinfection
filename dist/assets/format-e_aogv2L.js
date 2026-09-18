@@ -1,0 +1,1 @@
+function e(e){switch(e){case`pending`:return`Pending`;case`approved`:return`Approved`;case`rejected`:return`Rejected`;default:return e}}function t(e){if(!e)return`—`;try{return new Intl.DateTimeFormat(void 0,{dateStyle:`medium`,timeStyle:`short`}).format(new Date(e))}catch{return e}}function n(e,t){return e&&t?`Confirmed`:e?`Opened`:`—`}export{t as n,n as r,e as t};

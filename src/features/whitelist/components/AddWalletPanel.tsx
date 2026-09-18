@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from "react";
+import { fetchWlPreInsertAudit } from "../../clearance/lib/adminApi";
+import type { WlPreInsertAudit } from "../../clearance/lib/types";
 import { createWalletManual } from "../lib/adminApi";
 import type { WhitelistWallet } from "../lib/types";
 import { sanitizeNotes } from "../lib/sanitize";
@@ -19,20 +21,38 @@ export default function AddWalletPanel({
   const [spots, setSpots] = useState(1);
   const [source, setSource] = useState("manual");
   const [notes, setNotes] = useState("");
+  const [audit, setAudit] = useState<WlPreInsertAudit | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const onSubmit = async (event: FormEvent) => {
-    event.preventDefault();
+  const runAudit = async () => {
     setError("");
-
     const validation = validateWalletInput(address);
     if (!validation.valid) {
       setError(validation.error ?? "Invalid address.");
+      setAudit(null);
+      return;
+    }
+    setSubmitting(true);
+    try {
+      setAudit(await fetchWlPreInsertAudit(address));
+    } catch {
+      setError("Pre-insert audit failed.");
+      setAudit(null);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const onSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!audit?.can_insert) {
+      await runAudit();
       return;
     }
 
     setSubmitting(true);
+    setError("");
     try {
       const result = await createWalletManual({
         wallet_address: address,
@@ -42,7 +62,7 @@ export default function AddWalletPanel({
       });
 
       if (result.duplicate && result.wallet) {
-        setError("This wallet already exists.");
+        setError("This wallet already exists on the whitelist.");
         onDuplicate(result.wallet);
         return;
       }
@@ -69,7 +89,7 @@ export default function AddWalletPanel({
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="add-wallet-title" className="wl-admin__modal-title">
-          Add Wallet
+          Add Whitelist Wallet
         </h2>
 
         <label className="wl-admin__field-label" htmlFor="add-wallet-address">
@@ -79,7 +99,10 @@ export default function AddWalletPanel({
           id="add-wallet-address"
           className="wl-admin__field-input"
           value={address}
-          onChange={(e) => setAddress(e.target.value)}
+          onChange={(e) => {
+            setAddress(e.target.value);
+            setAudit(null);
+          }}
           required
         />
 
@@ -116,6 +139,35 @@ export default function AddWalletPanel({
           onChange={(e) => setNotes(e.target.value)}
         />
 
+        <button
+          type="button"
+          className="wl-admin__btn wl-admin__btn--ghost"
+          disabled={submitting}
+          onClick={() => void runAudit()}
+        >
+          Run pre-insert audit
+        </button>
+
+        {audit ? (
+          <div className="wl-admin__card">
+            <p>
+              Whitelist:{" "}
+              <strong>{audit.whitelist?.exists ? "Already exists" : "Not found"}</strong>
+            </p>
+            <p>
+              FCFS:{" "}
+              <strong>
+                {audit.fcfs?.exists
+                  ? `Found (${audit.fcfs.status ?? "unknown"})`
+                  : "Not found"}
+              </strong>
+            </p>
+            {audit.crossover?.valid_crossover ? (
+              <p className="wl-admin__badge">VALID WL + FCFS CROSSOVER</p>
+            ) : null}
+          </div>
+        ) : null}
+
         {error && (
           <p className="wl-admin__error" role="alert">
             {error}
@@ -133,9 +185,13 @@ export default function AddWalletPanel({
           <button
             type="submit"
             className="wl-admin__btn wl-admin__btn--primary"
-            disabled={submitting}
+            disabled={submitting || audit?.can_insert === false}
           >
-            {submitting ? "Adding…" : "Add Wallet"}
+            {submitting
+              ? "Adding…"
+              : audit?.can_insert
+                ? "Add to Whitelist"
+                : "Audit first"}
           </button>
         </div>
       </form>

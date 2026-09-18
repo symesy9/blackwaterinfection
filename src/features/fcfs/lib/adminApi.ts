@@ -76,6 +76,14 @@ export async function fetchFcfsApplicationsEnriched(
   const supabase = getSupabase();
   const auditFilter = resolveAuditFilter(filters);
 
+  const burstWindows =
+    filters.burstWindows && filters.burstWindows.length > 0
+      ? filters.burstWindows.map((window) => ({
+          start: window.start,
+          end: window.end,
+        }))
+      : null;
+
   const { data, error } = await supabase.rpc("admin_fcfs_list", {
     p_page: filters.page ?? 1,
     p_page_size: filters.pageSize ?? 25,
@@ -84,10 +92,11 @@ export async function fetchFcfsApplicationsEnriched(
     p_sort: filters.sortBy ?? "submitted_at",
     p_sort_dir: filters.sortDir ?? "desc",
     p_audit_filter: auditFilter,
-    p_burst_start: filters.burstStart ?? null,
-    p_burst_end: filters.burstEnd ?? null,
+    p_burst_start: burstWindows ? null : filters.burstStart ?? null,
+    p_burst_end: burstWindows ? null : filters.burstEnd ?? null,
     p_x_handle_normalised: filters.xHandleNormalised ?? null,
     p_hide_bursts: resolveHideBurstsRpcParam(filters),
+    p_burst_windows: burstWindows,
   });
 
   if (error) {

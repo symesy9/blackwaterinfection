@@ -1,11 +1,29 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import FcfsPagination from "../features/fcfs/components/FcfsPagination";
+import BulkDeleteConfirmModal from "../features/clearance/components/BulkDeleteConfirmModal";
+import BulkSelectionBar from "../features/clearance/components/BulkSelectionBar";
+import { formatSelectionChangedMessage } from "../features/clearance/lib/bulkDeleteSafety";
+import {
+  fetchWlApplicationsEnriched,
+  fetchWlSelectionCount,
+  wlBulkAction,
+  wlFilterSnapshot,
+} from "../features/clearance/lib/adminApi";
+import { useWlAdminFilters } from "../features/clearance/hooks/useWlAdminFilters";
+import { useBulkSelection } from "../features/clearance/hooks/useBulkSelection";
+import { buildWlSelectionPayload } from "../features/clearance/lib/selection";
+import type {
+  WlApplicationEnriched,
+  WlAuditFilter,
+  WlBulkOperation,
+} from "../features/clearance/lib/types";
 import {
   copyToClipboard,
   fetchDistinctSources,
   fetchAuditEvents,
   fetchImportBatches,
   fetchWalletById,
-  fetchWallets,
   removeWallet,
   resetConfirmation,
   restoreWallet,
@@ -29,21 +47,13 @@ import { shortenWalletAddress } from "../features/whitelist/lib/wallet";
 import AddWalletPanel from "../features/whitelist/components/AddWalletPanel";
 import AdminWhitelistChecker from "../features/whitelist/components/AdminWhitelistChecker";
 
-const PAGE_SIZE = 25;
-
 export default function AdminWalletsPage() {
-  const [wallets, setWallets] = useState<WhitelistWallet[]>([]);
+  const { filters, setFilters } = useWlAdminFilters();
+  const [rows, setRows] = useState<WlApplicationEnriched[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filters, setFilters] = useState<WalletFilters>({
-    page: 1,
-    pageSize: PAGE_SIZE,
-    sortBy: "created_at",
-    sortDir: "desc",
-    status: "all",
-    activeState: "all",
-  });
+  const pageSize = filters.pageSize ?? 25;
   const [sources, setSources] = useState<string[]>([]);
   const [batches, setBatches] = useState<ImportBatch[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -51,13 +61,29 @@ export default function AdminWalletsPage() {
   const [detailAudit, setDetailAudit] = useState<AuditEvent[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
+  const [deleteCount, setDeleteCount] = useState(0);
+  const pageIds = rows.map((row) => row.wallet.id);
+  const filterSnapshot = wlFilterSnapshot(filters);
+  const {
+    count: selectedCount,
+    toggle,
+    selectCurrentPage,
+    selectMatching,
+    clear: clearSelection,
+    rowSelected,
+    allPageSelected,
+    mode: selectionMode,
+    selection,
+  } = useBulkSelection(pageIds, total, filterSnapshot);
 
   const loadWallets = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const result = await fetchWallets(filters);
-      setWallets(result.wallets);
+      const result = await fetchWlApplicationsEnriched(filters);
+      setRows(result.wallets);
       setTotal(result.total);
     } catch {
       setError("Failed to load wallets.");
@@ -67,7 +93,7 @@ export default function AdminWalletsPage() {
   }, [filters]);
 
   useEffect(() => {
-    document.title = "WL Applications — Blackwater Labs Admin";
+    document.title = "Whitelist — Blackwater Labs Admin";
   }, []);
 
   useEffect(() => {
@@ -89,7 +115,69 @@ export default function AdminWalletsPage() {
     void fetchAuditEvents(50, selectedId).then(setDetailAudit);
   }, [selectedId]);
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const resolveWlSelectionCount = async (): Promise<number> => {
+    if (selectionMode === "all_matching") {
+      return fetchWlSelectionCount(filters, [...selection.excludedIds]);
+    }
+    return selectedCount;
+  };
+
+  const runWlBulk = async (operation: WlBulkOperation, expectedCount?: number) => {
+    if (selectedCount === 0) return;
+    setBulkBusy(true);
+    setError("");
+    try {
+      const effectiveCount = expectedCount ?? (await resolveWlSelectionCount());
+      const payload = buildWlSelectionPayload(selection, effectiveCount);
+      const result = await wlBulkAction(operation, filters, {
+        selectionMode: payload.selectionMode,
+        ids: payload.ids ?? undefined,
+        excludeIds: payload.excludeIds,
+        expectedCount: operation === "delete" ? effectiveCount : undefined,
+        selectionLabel: `WL ${operation}`,
+      });
+      if (result.outcome === "count_changed") {
+        setError(
+          formatSelectionChangedMessage(
+            result.expected ?? effectiveCount,
+            result.current ?? effectiveCount,
+          ),
+        );
+        return;
+      }
+      if (result.outcome !== "ok") {
+        setError(`Bulk ${operation} failed.`);
+        return;
+      }
+      clearSelection();
+      void loadWallets();
+    } catch {
+      setError(`Bulk ${operation} failed.`);
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
+  const openBulkDelete = async () => {
+    try {
+      setDeleteCount(await resolveWlSelectionCount());
+      setShowBulkDelete(true);
+    } catch {
+      setError("Could not verify remove count.");
+    }
+  };
+
+  const confirmBulkDelete = async () => {
+    const serverCount = await resolveWlSelectionCount();
+    if (serverCount !== deleteCount) {
+      setError(formatSelectionChangedMessage(deleteCount, serverCount));
+      setShowBulkDelete(false);
+      return;
+    }
+    await runWlBulk("delete", serverCount);
+    setShowBulkDelete(false);
+  };
 
   const handleCopy = async (wallet: WhitelistWallet) => {
     const ok = await copyToClipboard(wallet.wallet_address);
@@ -130,8 +218,11 @@ export default function AdminWalletsPage() {
     <div className="wl-admin-wallets">
       <div className="wl-admin__page-header">
         <div>
-          <h1 className="wl-admin__page-title">WL Applications</h1>
+          <h1 className="wl-admin__page-title">Whitelist</h1>
           <p className="wl-admin__page-lead">{total} records matching filters</p>
+          <p className="wl-admin__muted">
+            <Link to="/admin/clearance">← Clearance Overview</Link>
+          </p>
         </div>
         <button
           type="button"
@@ -229,21 +320,104 @@ export default function AdminWalletsPage() {
         </select>
         <select
           className="wl-admin__field-select"
-          value={`${filters.sortBy}-${filters.sortDir}`}
+          value={filters.auditFilter ?? "all"}
+          onChange={(e) =>
+            setFilters((f) => ({
+              ...f,
+              auditFilter: e.target.value as WlAuditFilter,
+              page: 1,
+            }))
+          }
+          aria-label="Audit filter"
+        >
+          <option value="all">All audit filters</option>
+          <option value="duplicate_wallet">Duplicate WL wallet</option>
+          <option value="also_in_fcfs">Also in FCFS</option>
+          <option value="manual_review">Manual review</option>
+          <option value="clean">Clean records</option>
+        </select>
+        <select
+          className="wl-admin__field-select"
+          value={`${filters.sortBy ?? "created_at"}-${filters.sortDir ?? "desc"}`}
           onChange={(e) => {
             const [sortBy, sortDir] = e.target.value.split("-") as [
               WalletFilters["sortBy"],
               WalletFilters["sortDir"],
             ];
-            setFilters((f) => ({ ...f, sortBy, sortDir }));
+            setFilters((f) => ({ ...f, sortBy, sortDir, page: 1 }));
           }}
           aria-label="Sort wallets"
         >
-          <option value="created_at-desc">Recently added</option>
+          <option value="created_at-desc">Newest first</option>
+          <option value="created_at-asc">Oldest first</option>
+          <option value="wallet_address_normalised-asc">Wallet A–Z</option>
+          <option value="wallet_address_normalised-desc">Wallet Z–A</option>
           <option value="confirmed_at-desc">Recently confirmed</option>
-          <option value="updated_at-desc">Recently updated</option>
         </select>
       </div>
+
+      <FcfsPagination
+        page={filters.page ?? 1}
+        pageSize={pageSize}
+        total={total}
+        onPageChange={(page) => setFilters((f) => ({ ...f, page }))}
+      />
+
+      <BulkSelectionBar
+        entityLabel="wallets"
+        pageCount={pageIds.length}
+        matchingTotal={total}
+        selectedCount={selectedCount}
+        mode={selectionMode}
+        onSelectPage={selectCurrentPage}
+        onSelectAllMatching={selectMatching}
+        onClear={clearSelection}
+      >
+        {selectedCount > 0 ? (
+          <>
+            <button
+              type="button"
+              className="wl-admin__btn wl-admin__btn--ghost"
+              disabled={bulkBusy}
+              onClick={() => void runWlBulk("flag_review")}
+            >
+              Flag for Review
+            </button>
+            <button
+              type="button"
+              className="wl-admin__btn wl-admin__btn--ghost"
+              disabled={bulkBusy}
+              onClick={() => void runWlBulk("clear_review")}
+            >
+              Clear Review Flag
+            </button>
+            <button
+              type="button"
+              className="wl-admin__btn wl-admin__btn--ghost"
+              disabled={bulkBusy}
+              onClick={() => void runWlBulk("activate")}
+            >
+              Activate
+            </button>
+            <button
+              type="button"
+              className="wl-admin__btn wl-admin__btn--ghost"
+              disabled={bulkBusy}
+              onClick={() => void runWlBulk("deactivate")}
+            >
+              Deactivate
+            </button>
+            <button
+              type="button"
+              className="wl-admin__btn wl-admin__btn--danger"
+              disabled={bulkBusy}
+              onClick={() => void openBulkDelete()}
+            >
+              Remove
+            </button>
+          </>
+        ) : null}
+      </BulkSelectionBar>
 
       {error && <p className="wl-admin__error">{error}</p>}
 
@@ -251,7 +425,19 @@ export default function AdminWalletsPage() {
         <table className="wl-admin__table">
           <thead>
             <tr>
+              <th scope="col">
+                <input
+                  type="checkbox"
+                  aria-label="Select all on page"
+                  checked={allPageSelected && rows.length > 0}
+                  onChange={() => {
+                    if (allPageSelected) clearSelection();
+                    else selectCurrentPage();
+                  }}
+                />
+              </th>
               <th scope="col">Wallet</th>
+              <th scope="col">Audit</th>
               <th scope="col">Status</th>
               <th scope="col">Method</th>
               <th scope="col">Source</th>
@@ -264,17 +450,38 @@ export default function AdminWalletsPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8}>Loading…</td>
+                <td colSpan={10}>Loading…</td>
               </tr>
-            ) : wallets.length === 0 ? (
+            ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={8}>No wallets found.</td>
+                <td colSpan={10}>No wallets found.</td>
               </tr>
             ) : (
-              wallets.map((wallet) => (
+              rows.map(({ wallet, audit_flags, also_in_fcfs }) => (
                 <tr key={wallet.id}>
                   <td>
+                    <input
+                      type="checkbox"
+                      checked={rowSelected(wallet.id)}
+                      aria-label={`Select ${wallet.wallet_address}`}
+                      onChange={() => toggle(wallet.id)}
+                    />
+                  </td>
+                  <td>
                     <code>{shortenWalletAddress(wallet.wallet_address)}</code>
+                  </td>
+                  <td>
+                    {also_in_fcfs ? (
+                      <span className="wl-admin__badge">ALSO IN FCFS</span>
+                    ) : null}
+                    {audit_flags.map((flag) => (
+                      <span
+                        key={flag}
+                        className="wl-admin__badge wl-admin__badge--warn"
+                      >
+                        {flag.replace(/_/g, " ")}
+                      </span>
+                    ))}
                   </td>
                   <td>{statusLabel(wallet.status)}</td>
                   <td>{confirmationMethodLabel(wallet.confirmation_method)}</td>
@@ -305,34 +512,12 @@ export default function AdminWalletsPage() {
         </table>
       </div>
 
-      <div className="wl-admin__pagination">
-        <button
-          type="button"
-          className="wl-admin__btn wl-admin__btn--ghost"
-          disabled={(filters.page ?? 1) <= 1}
-          onClick={() =>
-            setFilters((f) => ({ ...f, page: Math.max(1, (f.page ?? 1) - 1) }))
-          }
-        >
-          Previous
-        </button>
-        <span>
-          Page {filters.page ?? 1} of {totalPages}
-        </span>
-        <button
-          type="button"
-          className="wl-admin__btn wl-admin__btn--ghost"
-          disabled={(filters.page ?? 1) >= totalPages}
-          onClick={() =>
-            setFilters((f) => ({
-              ...f,
-              page: Math.min(totalPages, (f.page ?? 1) + 1),
-            }))
-          }
-        >
-          Next
-        </button>
-      </div>
+      <FcfsPagination
+        page={filters.page ?? 1}
+        pageSize={pageSize}
+        total={total}
+        onPageChange={(page) => setFilters((f) => ({ ...f, page }))}
+      />
 
       {showAdd && (
         <AddWalletPanel
@@ -513,6 +698,19 @@ export default function AdminWalletsPage() {
           </div>
         </div>
       )}
+
+      {showBulkDelete ? (
+        <BulkDeleteConfirmModal
+          title="Remove Whitelist Records"
+          count={deleteCount}
+          entityLabel="whitelist records"
+          actionVerb="remove"
+          confirmButtonLabel="Remove records"
+          filterDescription={filters.auditFilter ?? "current selection"}
+          onCancel={() => setShowBulkDelete(false)}
+          onConfirm={confirmBulkDelete}
+        />
+      ) : null}
     </div>
   );
 }

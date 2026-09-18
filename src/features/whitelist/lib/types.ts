@@ -116,7 +116,7 @@ export interface WalletFilters {
   activeState?: "active" | "inactive" | "all";
   source?: string;
   batchId?: string;
-  sortBy?: "created_at" | "confirmed_at" | "updated_at";
+  sortBy?: "created_at" | "confirmed_at" | "updated_at" | "wallet_address_normalised";
   sortDir?: "asc" | "desc";
   page?: number;
   pageSize?: number;
