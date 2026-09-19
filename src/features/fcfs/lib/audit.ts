@@ -10,12 +10,14 @@ export function isInvalidWalletFormat(walletNormalised: string): boolean {
 }
 
 export function isMalformedXHandle(
-  xHandle: string,
-  xHandleNormalised: string,
+  xHandle: string | null | undefined,
+  xHandleNormalised: string | null | undefined,
 ): boolean {
-  const validation = validateXHandleInput(xHandleNormalised);
+  const normalised = (xHandleNormalised ?? "").trim();
+  if (!normalised) return false;
+  const validation = validateXHandleInput(normalised);
   if (!validation.valid) return true;
-  return xHandle.trim().toLowerCase() !== `@${xHandleNormalised.toLowerCase()}`;
+  return (xHandle ?? "").trim().toLowerCase() !== `@${normalised.toLowerCase()}`;
 }
 
 export function computeAuditFlags(
@@ -32,7 +34,10 @@ export function computeAuditFlags(
   if (application.manual_review_flag) {
     flags.push("manual_review");
   }
-  if (context.duplicateXHandles.has(application.x_handle_normalised)) {
+  if (
+    application.x_handle_normalised &&
+    context.duplicateXHandles.has(application.x_handle_normalised)
+  ) {
     flags.push("duplicate_x_handle");
   }
   if (context.duplicateWallets.has(application.wallet_address_normalised)) {

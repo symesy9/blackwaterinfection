@@ -4,7 +4,7 @@ import type { FcfsPreInsertAudit } from "../../clearance/lib/types";
 import { sanitizeNotes } from "../../whitelist/lib/sanitize";
 import { validateWalletInput } from "../../whitelist/lib/wallet";
 import type { FcfsApplication, FcfsApplicationStatus } from "../lib/types";
-import { validateXHandleInput } from "../lib/xHandle";
+import { validateAdminFcfsXHandleInput } from "../lib/adminManual";
 
 interface AddFcfsPanelProps {
   onClose: () => void;
@@ -32,7 +32,7 @@ export default function AddFcfsPanel({
       setAudit(null);
       return;
     }
-    const handleValidation = validateXHandleInput(xHandle);
+    const handleValidation = validateAdminFcfsXHandleInput(xHandle);
     if (!handleValidation.valid) {
       setError(handleValidation.error ?? "Invalid X handle.");
       setAudit(null);
@@ -108,7 +108,7 @@ export default function AddFcfsPanel({
         />
 
         <label className="wl-admin__field-label" htmlFor="add-fcfs-handle">
-          X handle
+          X handle <span className="wl-admin__muted">(optional)</span>
         </label>
         <input
           id="add-fcfs-handle"
@@ -118,8 +118,7 @@ export default function AddFcfsPanel({
             setXHandle(event.target.value);
             setAudit(null);
           }}
-          placeholder="@username"
-          required
+          placeholder="@username (optional)"
         />
 
         <label className="wl-admin__field-label" htmlFor="add-fcfs-status">
@@ -167,10 +166,14 @@ export default function AddFcfsPanel({
               FCFS wallet:{" "}
               <strong>{audit.fcfs_wallet?.exists ? "ALREADY EXISTS" : "NOT FOUND"}</strong>
             </p>
-            <p>
-              FCFS handle:{" "}
-              <strong>{audit.fcfs_handle?.exists ? "ALREADY USED" : "NOT FOUND"}</strong>
-            </p>
+            {xHandle.trim() ? (
+              <p>
+                FCFS handle:{" "}
+                <strong>{audit.fcfs_handle?.exists ? "ALREADY USED" : "NOT FOUND"}</strong>
+              </p>
+            ) : (
+              <p className="wl-admin__muted">X handle omitted — duplicate-X check skipped.</p>
+            )}
             {audit.crossover?.valid_crossover ? (
               <p className="wl-admin__badge">VALID WL + FCFS CROSSOVER</p>
             ) : null}

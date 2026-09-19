@@ -43,8 +43,8 @@ export interface FcfsApplication {
   id: string;
   wallet_address: string;
   wallet_address_normalised: string;
-  x_handle: string;
-  x_handle_normalised: string;
+  x_handle: string | null;
+  x_handle_normalised: string | null;
   submitted_at: string;
   follow_opened_at: string | null;
   follow_confirmed_at: string | null;

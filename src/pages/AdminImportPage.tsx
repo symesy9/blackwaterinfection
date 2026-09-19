@@ -154,7 +154,7 @@ export default function AdminImportPage() {
         placeholder={
           dataset === "whitelist"
             ? "wallet,notes\n0x...,optional notes"
-            : "wallet,x_handle,status,notes"
+            : "wallet,x_handle (optional),status,notes"
         }
         onChange={(event) => setText(event.target.value)}
       />

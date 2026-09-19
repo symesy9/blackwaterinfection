@@ -50,7 +50,7 @@ export default function FcfsApplicationDetailModal({
   onUpdated,
 }: FcfsApplicationDetailModalProps) {
   const [editWallet, setEditWallet] = useState(detail.wallet_address);
-  const [editHandle, setEditHandle] = useState(detail.x_handle);
+  const [editHandle, setEditHandle] = useState(detail.x_handle ?? "");
   const [related, setRelated] = useState<FcfsRelatedCounts | null>(null);
   const [reviewReason, setReviewReason] = useState<ManualReviewReason>(
     (detail.manual_review_reason as ManualReviewReason) ?? "OTHER",
@@ -58,7 +58,7 @@ export default function FcfsApplicationDetailModal({
 
   useEffect(() => {
     setEditWallet(detail.wallet_address);
-    setEditHandle(detail.x_handle);
+    setEditHandle(detail.x_handle ?? "");
     setReviewReason(
       (detail.manual_review_reason as ManualReviewReason) ?? "OTHER",
     );
@@ -99,12 +99,14 @@ export default function FcfsApplicationDetailModal({
     onUpdated();
   };
 
-  const xUrl = xProfileUrl(detail.x_handle);
-  const sameHandleParams = fcfsFiltersToSearchParams({
-    xHandleNormalised: detail.x_handle_normalised,
-    auditFilter: "duplicate_x_handle",
-    page: 1,
-  });
+  const xUrl = detail.x_handle ? xProfileUrl(detail.x_handle) : null;
+  const sameHandleParams = detail.x_handle_normalised
+    ? fcfsFiltersToSearchParams({
+        xHandleNormalised: detail.x_handle_normalised,
+        auditFilter: "duplicate_x_handle",
+        page: 1,
+      })
+    : null;
 
   return (
     <div
@@ -170,14 +172,22 @@ export default function FcfsApplicationDetailModal({
           <dl className="wl-admin__detail-grid">
             <div>
               <dt>X handle</dt>
-              <dd>@{related?.x_handle_normalised ?? detail.x_handle_normalised}</dd>
+              <dd>
+                {related?.x_handle_normalised ?? detail.x_handle_normalised
+                  ? `@${related?.x_handle_normalised ?? detail.x_handle_normalised}`
+                  : "—"}
+              </dd>
             </div>
             <div>
               <dt>FCFS applications using handle</dt>
               <dd>
-                <Link to={`/admin/fcfs?${sameHandleParams.toString()}`}>
-                  {related?.same_x_handle_count ?? detail.duplicate_x_handle_count}
-                </Link>
+                {sameHandleParams ? (
+                  <Link to={`/admin/fcfs?${sameHandleParams.toString()}`}>
+                    {related?.same_x_handle_count ?? detail.duplicate_x_handle_count}
+                  </Link>
+                ) : (
+                  "—"
+                )}
               </dd>
             </div>
             <div>

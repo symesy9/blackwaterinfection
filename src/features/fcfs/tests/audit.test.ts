@@ -42,6 +42,8 @@ describe("fcfs audit helpers", () => {
   it("detects malformed x handles", () => {
     expect(isMalformedXHandle("@testuser", "testuser")).toBe(false);
     expect(isMalformedXHandle("TestUser", "testuser")).toBe(true);
+    expect(isMalformedXHandle(null, null)).toBe(false);
+    expect(isMalformedXHandle("", "")).toBe(false);
   });
 
   it("computes duplicate x handle flags", () => {

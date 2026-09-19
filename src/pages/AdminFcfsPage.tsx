@@ -627,7 +627,7 @@ export default function AdminFcfsPage() {
                       <input
                         type="checkbox"
                         checked={rowSelected(application.id)}
-                        aria-label={`Select ${application.x_handle}`}
+                        aria-label={`Select ${application.x_handle ?? application.wallet_address}`}
                         onClick={(event) => event.stopPropagation()}
                         onChange={() => toggle(application.id)}
                       />

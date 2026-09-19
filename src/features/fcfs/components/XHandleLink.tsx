@@ -4,13 +4,14 @@ import {
 } from "../lib/xHandle";
 
 type XHandleLinkProps = {
-  handle: string;
+  handle: string | null | undefined;
   className?: string;
 };
 
 export default function XHandleLink({ handle, className = "" }: XHandleLinkProps) {
-  const url = xProfileUrl(handle);
-  const display = formatXHandleDisplay(handle) || handle;
+  const safeHandle = handle ?? "";
+  const url = xProfileUrl(safeHandle);
+  const display = formatXHandleDisplay(safeHandle) || safeHandle || "—";
   const classes = ["wl-admin__x-link", className].filter(Boolean).join(" ");
 
   if (!url) {
