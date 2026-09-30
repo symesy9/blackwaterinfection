@@ -22,6 +22,14 @@ export function preloadTraitUrls(urls: string[]): void {
   }
 }
 
+/** Try optimized URL first (e.g. WebP preview), then fall back to full PNG. */
+export function loadTraitImageWithFallback(
+  primaryUrl: string,
+  fallbackUrl: string,
+): Promise<HTMLImageElement> {
+  return loadTraitImage(primaryUrl).catch(() => loadTraitImage(fallbackUrl));
+}
+
 export function clearTraitImageCacheForTests(): void {
   cache.clear();
 }

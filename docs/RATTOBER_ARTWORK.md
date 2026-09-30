@@ -14,11 +14,14 @@ public/assets/rattober/
   hats-hair/
 ```
 
-Then regenerate the manifest:
+Then regenerate the manifest (also builds WebP thumbnails for fast UI):
 
 ```bash
 npm run rattober:manifest
 ```
+
+This writes `public/assets/rattober/_derived/thumbs/` (512px grid) and
+`_derived/preview/` (1024px live preview). **Export/download still uses full 2048 PNGs.**
 
 Commit the updated `src/features/rattober/config/traits.generated.json` (and the PNGs under `public/assets/rattober/`).
 
@@ -45,7 +48,7 @@ Preview and export use the same order (`RATTOBER_RENDER_ORDER` in `src/features/
 
 ## UI category order
 
-Skin → Clothing → Eyes → Mouth → Hats/Hair → Background (`RATTOBER_UI_ORDER`).
+Background → Skin → Clothing → Mouth → Eyes → Hats/Hair (`RATTOBER_UI_ORDER`).
 
 ## How traits are registered
 

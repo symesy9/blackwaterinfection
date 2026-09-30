@@ -20,7 +20,7 @@ export async function compositeRatToBlob(
     const traitId = selection[category];
     const trait = findTraitById(category, traitId);
     if (!trait) continue;
-    const url = traitAssetUrl(category, trait.file);
+    const url = traitAssetUrl(category, trait.file, "full");
     const img = await loadTraitImage(url);
     ctx.drawImage(img, 0, 0, RATTOBER_CANVAS_SIZE, RATTOBER_CANVAS_SIZE);
   }

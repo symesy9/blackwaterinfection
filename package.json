@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -b --noEmit",
-    "rattober:manifest": "node scripts/generate-rattober-manifest.mjs"
+    "rattober:manifest": "node scripts/generate-rattober-manifest.mjs && node scripts/generate-rattober-thumbnails.mjs",
+    "rattober:thumbnails": "node scripts/generate-rattober-thumbnails.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
@@ -27,6 +28,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "lightningcss-darwin-arm64": "^1.33.0",
+    "sharp": "^0.34.5",
     "typescript": "^5.9.3",
     "vite": "^8.0.12",
     "vitest": "^4.1.10"

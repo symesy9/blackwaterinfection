@@ -8,14 +8,14 @@ export const RATTOBER_RENDER_ORDER = [
   "hatsHair",
 ] as const;
 
-/** User-facing category picker order (background last). */
+/** User-facing category tab order (compositing order unchanged). */
 export const RATTOBER_UI_ORDER = [
+  "backgrounds",
   "skins",
   "clothing",
-  "eyes",
   "mouths",
+  "eyes",
   "hatsHair",
-  "backgrounds",
 ] as const;
 
 export type RattoberCategoryId = (typeof RATTOBER_RENDER_ORDER)[number];

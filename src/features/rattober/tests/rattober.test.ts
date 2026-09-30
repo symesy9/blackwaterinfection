@@ -49,9 +49,10 @@ describe("Rattober category order", () => {
     expect(RATTOBER_RENDER_ORDER.at(-1)).toBe("hatsHair");
   });
 
-  it("shows background last in UI order", () => {
-    expect(RATTOBER_UI_ORDER.at(-1)).toBe("backgrounds");
-    expect(RATTOBER_UI_ORDER[0]).toBe("skins");
+  it("lists background first in UI tab order", () => {
+    expect(RATTOBER_UI_ORDER[0]).toBe("backgrounds");
+    expect(RATTOBER_UI_ORDER[1]).toBe("skins");
+    expect(RATTOBER_UI_ORDER.at(-1)).toBe("hatsHair");
   });
 
   it("uses the same six categories in both orders", () => {

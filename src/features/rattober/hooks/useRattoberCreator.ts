@@ -6,7 +6,7 @@ import {
 } from "../config/categories";
 import type { RattoberSelection } from "../lib/compositeCanvas";
 import { compositeRatToBlob } from "../lib/compositeCanvas";
-import { loadTraitImage, preloadTraitUrls } from "../lib/imageLoad";
+import { loadTraitImageWithFallback, preloadTraitUrls } from "../lib/imageLoad";
 import {
   buildEmptySelection,
   firstMissingCategory,
@@ -41,7 +41,7 @@ export function exportBlockedMessage(selection: RattoberSelection): string | nul
 
 export function useRattoberCreator() {
   const [selection, setSelection] = useState<RattoberSelection>(buildEmptySelection);
-  const [activeCategory, setActiveCategory] = useState<RattoberCategoryId>("skins");
+  const [activeCategory, setActiveCategory] = useState<RattoberCategoryId>("backgrounds");
   const [subjectId, setSubjectId] = useState(() => randomSubjectId());
   const [exporting, setExporting] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -66,12 +66,15 @@ export function useRattoberCreator() {
     return idx >= 0 ? idx : null;
   }, [activeCategory, activeTraits, selection]);
 
-  const layerUrls = useMemo(() => {
+  const layerSources = useMemo(() => {
     return RATTOBER_RENDER_ORDER.map((cat) => {
       const trait = findTraitById(cat, selection[cat]);
       if (!trait) return null;
-      return traitAssetUrl(cat, trait.file);
-    }).filter(Boolean) as string[];
+      return {
+        preview: traitAssetUrl(cat, trait.file, "preview"),
+        full: traitAssetUrl(cat, trait.file, "full"),
+      };
+    }).filter(Boolean) as { preview: string; full: string }[];
   }, [selection]);
 
   useEffect(() => {
@@ -79,13 +82,17 @@ export function useRattoberCreator() {
       setPreviewReady(true);
       return;
     }
-    if (layerUrls.length === 0) {
+    if (layerSources.length === 0) {
       setPreviewReady(true);
       return;
     }
     let cancelled = false;
     setPreviewReady(false);
-    Promise.all(layerUrls.map((url) => loadTraitImage(url)))
+    Promise.all(
+      layerSources.map(({ preview, full }) =>
+        loadTraitImageWithFallback(preview, full),
+      ),
+    )
       .then(() => {
         if (!cancelled) setPreviewReady(true);
       })
@@ -95,7 +102,7 @@ export function useRattoberCreator() {
     return () => {
       cancelled = true;
     };
-  }, [layerUrls, ready, characterStarted]);
+  }, [layerSources, ready, characterStarted]);
 
   useEffect(() => {
     if (activeTraits.length === 0) return;
@@ -107,7 +114,7 @@ export function useRattoberCreator() {
     preloadTraitUrls(
       [prev, next, current]
         .filter(Boolean)
-        .map((t) => traitAssetUrl(activeCategory, t!.file)),
+        .map((t) => traitAssetUrl(activeCategory, t!.file, "preview")),
     );
   }, [activeCategory, selectedIndex, activeTraits]);
 

@@ -5,6 +5,17 @@ body.bw-rattober-active {
   color: var(--bw-text, rgba(232, 224, 214, 0.94));
 }
 
+/* Faint lab parchment — dark traits read clearly on grid + preview */
+:root {
+  --rt-trait-surface: linear-gradient(
+    168deg,
+    rgba(236, 214, 158, 0.38) 0%,
+    rgba(248, 242, 228, 0.52) 42%,
+    rgba(255, 252, 246, 0.58) 100%
+  );
+  --rt-trait-surface-solid: rgba(250, 246, 236, 0.55);
+}
+
 .bw-rattober {
   min-height: 100dvh;
   background: var(--bw-bg, #070606);
@@ -16,6 +27,9 @@ body.bw-rattober-active {
 .bw-rattober__shell {
   position: relative;
   z-index: 1;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
   padding:
     calc(var(--bw-mobile-header, 2.35rem) + 0.75rem)
     calc(var(--bw-safe-right, 0px) + 1rem)
@@ -70,8 +84,10 @@ body.bw-rattober-active {
 .rt-page {
   position: relative;
   z-index: 1;
-  max-width: 72rem;
+  width: 100%;
+  max-width: min(72rem, 100%);
   margin: 0 auto;
+  min-width: 0;
 }
 
 .rt-page__header {
@@ -102,12 +118,19 @@ body.bw-rattober-active {
 .rt-creator {
   display: grid;
   gap: 1.25rem;
+  min-width: 0;
+}
+
+.rt-creator__preview-col,
+.rt-creator__traits-col {
+  min-width: 0;
 }
 
 .rt-creator__preview-col {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  width: 100%;
 }
 
 .rt-preview__frame {
@@ -127,17 +150,23 @@ body.bw-rattober-active {
 .rt-preview__viewport {
   position: relative;
   aspect-ratio: 1 / 1;
-  width: 100%;
-  max-width: 28rem;
+  width: min(100%, 28rem);
+  max-width: 100%;
   margin: 0.5rem auto;
   overflow: hidden;
+  contain: layout paint;
   background:
-    linear-gradient(45deg, rgba(255, 255, 255, 0.04) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(255, 255, 255, 0.04) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.04) 75%),
-    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.04) 75%);
-  background-size: 16px 16px;
-  background-color: rgba(0, 0, 0, 0.35);
+    linear-gradient(45deg, rgba(201, 162, 39, 0.06) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(201, 162, 39, 0.06) 25%, transparent 25%),
+    var(--rt-trait-surface);
+  background-size: 14px 14px, 14px 14px, 100% 100%;
+  background-color: var(--rt-trait-surface-solid);
+}
+
+.rt-preview__stack {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
 }
 
 .rt-preview__layer {
@@ -146,6 +175,7 @@ body.bw-rattober-active {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center;
   pointer-events: none;
 }
 
@@ -172,7 +202,8 @@ body.bw-rattober-active {
   font-size: 0.75rem;
   letter-spacing: 0.1em;
   color: var(--wl-muted, rgba(180, 170, 160, 0.62));
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(250, 246, 236, 0.72);
+  color: rgba(60, 52, 44, 0.72);
 }
 
 .rt-tabs {
@@ -238,7 +269,7 @@ body.bw-rattober-active {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(4.75rem, 1fr));
   gap: 0.55rem;
 }
 
@@ -263,16 +294,31 @@ body.bw-rattober-active {
   display: block;
   aspect-ratio: 1 / 1;
   overflow: hidden;
+  border-radius: 1px;
   background:
-    linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%);
-  background-size: 10px 10px;
+    linear-gradient(45deg, rgba(201, 162, 39, 0.08) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(201, 162, 39, 0.08) 25%, transparent 25%),
+    var(--rt-trait-surface);
+  background-size: 8px 8px, 8px 8px, 100% 100%;
+  background-color: var(--rt-trait-surface-solid);
+  box-shadow: inset 0 0 0 1px rgba(201, 162, 39, 0.12);
 }
 
 .rt-grid__thumb img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.rt-grid__thumb img.is-loaded {
+  opacity: 1;
+}
+
+.rt-grid__thumb img.is-pending {
+  opacity: 0;
 }
 
 .rt-grid__name {
@@ -412,13 +458,13 @@ body.bw-rattober-active {
 
 @media (min-width: 480px) {
   .rt-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(5.25rem, 1fr));
   }
 }
 
 @media (min-width: 900px) {
   .rt-creator {
-    grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+    grid-template-columns: minmax(14rem, 26rem) minmax(0, 1fr);
     align-items: start;
     gap: 1.5rem;
   }
@@ -426,15 +472,33 @@ body.bw-rattober-active {
   .rt-creator__preview-col {
     position: sticky;
     top: calc(var(--bw-mobile-header, 2.35rem) + 0.75rem);
+    align-self: start;
   }
 
   .rt-preview__viewport {
-    max-width: none;
+    width: 100%;
+    max-width: 100%;
   }
 }
 
 @media (min-width: 1024px) {
+  .bw-rattober__shell {
+    margin-left: 12.5rem;
+    padding-inline: 2rem 2.5rem;
+  }
+
   .rt-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  }
+}
+
+@media (min-width: 1440px) {
+  .bw-rattober__shell {
+    margin-left: 13rem;
+    padding-inline: 2.5rem 3rem;
+  }
+
+  .rt-creator {
+    grid-template-columns: minmax(16rem, 28rem) minmax(0, 1fr);
   }
 }

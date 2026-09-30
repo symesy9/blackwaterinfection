@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { RattoberCategoryId } from "../config/categories";
 import type { RattoberTrait } from "../lib/traits";
 import { traitAssetUrl } from "../lib/traits";
@@ -8,6 +9,32 @@ type TraitGridProps = {
   selectedId: string | null;
   onSelect: (traitId: string) => void;
 };
+
+function TraitThumb({
+  category,
+  file,
+}: {
+  category: RattoberCategoryId;
+  file: string;
+}) {
+  const [src, setSrc] = useState(() => traitAssetUrl(category, file, "thumb"));
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <img
+      src={src}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      className={loaded ? "is-loaded" : "is-pending"}
+      onLoad={() => setLoaded(true)}
+      onError={() => {
+        const full = traitAssetUrl(category, file, "full");
+        if (src !== full) setSrc(full);
+      }}
+    />
+  );
+}
 
 export default function TraitGrid({
   category,
@@ -33,12 +60,7 @@ export default function TraitGrid({
               onClick={() => onSelect(trait.id)}
             >
               <span className="rt-grid__thumb">
-                <img
-                  src={traitAssetUrl(category, trait.file)}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                />
+                <TraitThumb category={category} file={trait.file} />
               </span>
               <span className="rt-grid__name">{trait.name}</span>
             </button>

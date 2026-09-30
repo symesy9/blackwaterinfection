@@ -28,10 +28,30 @@ export function getTraitsForCategory(category: RattoberCategoryId): RattoberTrai
   return manifest.traits[category] ?? [];
 }
 
-export function traitAssetUrl(category: RattoberCategoryId, file: string): string {
+export type RattoberAssetVariant = "full" | "preview" | "thumb";
+
+function assetBaseUrl(): string {
+  return import.meta.env.BASE_URL.replace(/\/?$/, "/");
+}
+
+function pngBaseName(file: string): string {
+  return file.replace(/\.png$/i, "");
+}
+
+/** Full 2048 PNG (export). Preview/thumb WebP when generated under _derived/. */
+export function traitAssetUrl(
+  category: RattoberCategoryId,
+  file: string,
+  variant: RattoberAssetVariant = "full",
+): string {
   const folder = RATTOBER_FOLDER_BY_CATEGORY[category];
-  const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
-  return `${base}assets/rattober/${folder}/${encodeURIComponent(file)}`;
+  const base = assetBaseUrl();
+  if (variant === "full") {
+    return `${base}assets/rattober/${folder}/${encodeURIComponent(file)}`;
+  }
+  const derivedFolder = variant === "thumb" ? "thumbs" : "preview";
+  const webp = `${pngBaseName(file)}.webp`;
+  return `${base}assets/rattober/_derived/${derivedFolder}/${folder}/${encodeURIComponent(webp)}`;
 }
 
 export function findTraitById(
