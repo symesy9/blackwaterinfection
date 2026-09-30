@@ -12,6 +12,7 @@ import RoadmapPage from "./pages/RoadmapPage";
 import LogsPage from "./pages/LogsPage";
 import TeamPage from "./pages/TeamPage";
 import FaqsPage from "./pages/FaqsPage";
+import RattoberPage from "./pages/RattoberPage";
 import AdminRouteGuard from "./features/whitelist/components/AdminRouteGuard";
 import AdminLayout from "./features/whitelist/components/AdminLayout";
 import { CONTAINMENT_GAME_PUBLIC, FACILITY_LOCKDOWN, USE_NEW_HOMEPAGE } from "./lib/features";
@@ -81,6 +82,7 @@ export default function App() {
         <Route path="/logs/:slug" element={<Navigate to="/logs" replace />} />
         <Route path="/team" element={<TeamPage />} />
         <Route path="/faqs" element={<FaqsPage />} />
+        <Route path="/rattober" element={<RattoberPage />} />
         <Route
           path="/admin/login"
           element={

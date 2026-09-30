@@ -9,6 +9,7 @@ import "./styles/fcfs.css";
 import "./styles/homepage.css";
 import "./styles/site.css";
 import "./styles/facility-lockdown.css";
+import "./styles/rattober.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

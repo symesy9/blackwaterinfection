@@ -1,0 +1,1038 @@
+{
+  "generatedAt": "2026-09-30T11:23:32.328Z",
+  "canvasSize": 2048,
+  "traits": {
+    "backgrounds": [
+      {
+        "id": "backgrounds-background-4",
+        "name": "Background 4",
+        "category": "backgrounds",
+        "file": "Background-4.png"
+      },
+      {
+        "id": "backgrounds-background-5",
+        "name": "Background 5",
+        "category": "backgrounds",
+        "file": "Background-5.png"
+      },
+      {
+        "id": "backgrounds-background-6",
+        "name": "Background 6",
+        "category": "backgrounds",
+        "file": "Background-6.png"
+      },
+      {
+        "id": "backgrounds-background-7",
+        "name": "Background 7",
+        "category": "backgrounds",
+        "file": "Background-7.png"
+      },
+      {
+        "id": "backgrounds-background-8",
+        "name": "Background 8",
+        "category": "backgrounds",
+        "file": "Background-8.png"
+      }
+    ],
+    "skins": [
+      {
+        "id": "skins-body-1",
+        "name": "Body 1",
+        "category": "skins",
+        "file": "Body-1.png"
+      },
+      {
+        "id": "skins-body-2",
+        "name": "Body 2",
+        "category": "skins",
+        "file": "Body-2.png"
+      },
+      {
+        "id": "skins-body-3",
+        "name": "Body 3",
+        "category": "skins",
+        "file": "Body-3.png"
+      },
+      {
+        "id": "skins-body-4",
+        "name": "Body 4",
+        "category": "skins",
+        "file": "Body-4.png"
+      },
+      {
+        "id": "skins-body-5",
+        "name": "Body 5",
+        "category": "skins",
+        "file": "Body-5.png"
+      },
+      {
+        "id": "skins-body-6",
+        "name": "Body 6",
+        "category": "skins",
+        "file": "Body-6.png"
+      },
+      {
+        "id": "skins-body-7",
+        "name": "Body 7",
+        "category": "skins",
+        "file": "Body-7.png"
+      },
+      {
+        "id": "skins-body-8",
+        "name": "Body 8",
+        "category": "skins",
+        "file": "Body-8.png"
+      },
+      {
+        "id": "skins-body-9",
+        "name": "Body 9",
+        "category": "skins",
+        "file": "Body-9.png"
+      },
+      {
+        "id": "skins-body-10",
+        "name": "Body 10",
+        "category": "skins",
+        "file": "Body-10.png"
+      },
+      {
+        "id": "skins-body-11",
+        "name": "Body 11",
+        "category": "skins",
+        "file": "Body-11.png"
+      }
+    ],
+    "clothing": [
+      {
+        "id": "clothing-clothes-2",
+        "name": "Clothes 2",
+        "category": "clothing",
+        "file": "Clothes-2.png"
+      },
+      {
+        "id": "clothing-clothes-3",
+        "name": "Clothes 3",
+        "category": "clothing",
+        "file": "Clothes-3.png"
+      },
+      {
+        "id": "clothing-clothes-4",
+        "name": "Clothes 4",
+        "category": "clothing",
+        "file": "Clothes-4.png"
+      },
+      {
+        "id": "clothing-clothes-5",
+        "name": "Clothes 5",
+        "category": "clothing",
+        "file": "Clothes-5.png"
+      },
+      {
+        "id": "clothing-clothes-6",
+        "name": "Clothes 6",
+        "category": "clothing",
+        "file": "Clothes-6.png"
+      },
+      {
+        "id": "clothing-clothes-7",
+        "name": "Clothes 7",
+        "category": "clothing",
+        "file": "Clothes-7.png"
+      },
+      {
+        "id": "clothing-clothes-8",
+        "name": "Clothes 8",
+        "category": "clothing",
+        "file": "Clothes-8.png"
+      },
+      {
+        "id": "clothing-clothes-9",
+        "name": "Clothes 9",
+        "category": "clothing",
+        "file": "Clothes-9.png"
+      },
+      {
+        "id": "clothing-clothes-10",
+        "name": "Clothes 10",
+        "category": "clothing",
+        "file": "Clothes-10.png"
+      },
+      {
+        "id": "clothing-clothes-11",
+        "name": "Clothes 11",
+        "category": "clothing",
+        "file": "Clothes-11.png"
+      },
+      {
+        "id": "clothing-clothes-12",
+        "name": "Clothes 12",
+        "category": "clothing",
+        "file": "Clothes-12.png"
+      },
+      {
+        "id": "clothing-clothes-13",
+        "name": "Clothes 13",
+        "category": "clothing",
+        "file": "Clothes-13.png"
+      },
+      {
+        "id": "clothing-clothes-14",
+        "name": "Clothes 14",
+        "category": "clothing",
+        "file": "Clothes-14.png"
+      },
+      {
+        "id": "clothing-clothes-15",
+        "name": "Clothes 15",
+        "category": "clothing",
+        "file": "Clothes-15.png"
+      },
+      {
+        "id": "clothing-clothes-16",
+        "name": "Clothes 16",
+        "category": "clothing",
+        "file": "Clothes-16.png"
+      },
+      {
+        "id": "clothing-clothes-17",
+        "name": "Clothes 17",
+        "category": "clothing",
+        "file": "Clothes-17.png"
+      },
+      {
+        "id": "clothing-clothes-18",
+        "name": "Clothes 18",
+        "category": "clothing",
+        "file": "Clothes-18.png"
+      },
+      {
+        "id": "clothing-clothes-19",
+        "name": "Clothes 19",
+        "category": "clothing",
+        "file": "Clothes-19.png"
+      },
+      {
+        "id": "clothing-clothes-20",
+        "name": "Clothes 20",
+        "category": "clothing",
+        "file": "Clothes-20.png"
+      },
+      {
+        "id": "clothing-clothes-21",
+        "name": "Clothes 21",
+        "category": "clothing",
+        "file": "Clothes-21.png"
+      },
+      {
+        "id": "clothing-clothes-22",
+        "name": "Clothes 22",
+        "category": "clothing",
+        "file": "Clothes-22.png"
+      },
+      {
+        "id": "clothing-clothes-23",
+        "name": "Clothes 23",
+        "category": "clothing",
+        "file": "Clothes-23.png"
+      },
+      {
+        "id": "clothing-clothes-24",
+        "name": "Clothes 24",
+        "category": "clothing",
+        "file": "Clothes-24.png"
+      },
+      {
+        "id": "clothing-clothes-25",
+        "name": "Clothes 25",
+        "category": "clothing",
+        "file": "Clothes-25.png"
+      },
+      {
+        "id": "clothing-clothes-26",
+        "name": "Clothes 26",
+        "category": "clothing",
+        "file": "Clothes-26.png"
+      },
+      {
+        "id": "clothing-clothes-27",
+        "name": "Clothes 27",
+        "category": "clothing",
+        "file": "Clothes-27.png"
+      },
+      {
+        "id": "clothing-clothes-28",
+        "name": "Clothes 28",
+        "category": "clothing",
+        "file": "Clothes-28.png"
+      },
+      {
+        "id": "clothing-clothes-29",
+        "name": "Clothes 29",
+        "category": "clothing",
+        "file": "Clothes-29.png"
+      },
+      {
+        "id": "clothing-clothes-30",
+        "name": "Clothes 30",
+        "category": "clothing",
+        "file": "Clothes-30.png"
+      },
+      {
+        "id": "clothing-clothes-31",
+        "name": "Clothes 31",
+        "category": "clothing",
+        "file": "Clothes-31.png"
+      },
+      {
+        "id": "clothing-clothes-32",
+        "name": "Clothes 32",
+        "category": "clothing",
+        "file": "Clothes-32.png"
+      },
+      {
+        "id": "clothing-clothes-33",
+        "name": "Clothes 33",
+        "category": "clothing",
+        "file": "Clothes-33.png"
+      },
+      {
+        "id": "clothing-clothes-34",
+        "name": "Clothes 34",
+        "category": "clothing",
+        "file": "Clothes-34.png"
+      },
+      {
+        "id": "clothing-clothes-35",
+        "name": "Clothes 35",
+        "category": "clothing",
+        "file": "Clothes-35.png"
+      },
+      {
+        "id": "clothing-clothes-36",
+        "name": "Clothes 36",
+        "category": "clothing",
+        "file": "Clothes-36.png"
+      },
+      {
+        "id": "clothing-clothes-37",
+        "name": "Clothes 37",
+        "category": "clothing",
+        "file": "Clothes-37.png"
+      },
+      {
+        "id": "clothing-clothes-38",
+        "name": "Clothes 38",
+        "category": "clothing",
+        "file": "Clothes-38.png"
+      },
+      {
+        "id": "clothing-clothes-39",
+        "name": "Clothes 39",
+        "category": "clothing",
+        "file": "Clothes-39.png"
+      },
+      {
+        "id": "clothing-clothes-40",
+        "name": "Clothes 40",
+        "category": "clothing",
+        "file": "Clothes-40.png"
+      },
+      {
+        "id": "clothing-clothes-41",
+        "name": "Clothes 41",
+        "category": "clothing",
+        "file": "Clothes-41.png"
+      }
+    ],
+    "eyes": [
+      {
+        "id": "eyes-eyes-1",
+        "name": "Eyes 1",
+        "category": "eyes",
+        "file": "Eyes-1.png"
+      },
+      {
+        "id": "eyes-eyes-2",
+        "name": "Eyes 2",
+        "category": "eyes",
+        "file": "Eyes-2.png"
+      },
+      {
+        "id": "eyes-eyes-3",
+        "name": "Eyes 3",
+        "category": "eyes",
+        "file": "Eyes-3.png"
+      },
+      {
+        "id": "eyes-eyes-4",
+        "name": "Eyes 4",
+        "category": "eyes",
+        "file": "Eyes-4.png"
+      },
+      {
+        "id": "eyes-eyes-5",
+        "name": "Eyes 5",
+        "category": "eyes",
+        "file": "Eyes-5.png"
+      },
+      {
+        "id": "eyes-eyes-6",
+        "name": "Eyes 6",
+        "category": "eyes",
+        "file": "Eyes-6.png"
+      },
+      {
+        "id": "eyes-eyes-7",
+        "name": "Eyes 7",
+        "category": "eyes",
+        "file": "Eyes-7.png"
+      },
+      {
+        "id": "eyes-eyes-8",
+        "name": "Eyes 8",
+        "category": "eyes",
+        "file": "Eyes-8.png"
+      },
+      {
+        "id": "eyes-eyes-9",
+        "name": "Eyes 9",
+        "category": "eyes",
+        "file": "Eyes-9.png"
+      },
+      {
+        "id": "eyes-eyes-10",
+        "name": "Eyes 10",
+        "category": "eyes",
+        "file": "Eyes-10.png"
+      },
+      {
+        "id": "eyes-eyes-11",
+        "name": "Eyes 11",
+        "category": "eyes",
+        "file": "Eyes-11.png"
+      },
+      {
+        "id": "eyes-eyes-12",
+        "name": "Eyes 12",
+        "category": "eyes",
+        "file": "Eyes-12.png"
+      },
+      {
+        "id": "eyes-eyes-13",
+        "name": "Eyes 13",
+        "category": "eyes",
+        "file": "Eyes-13.png"
+      },
+      {
+        "id": "eyes-eyes-14",
+        "name": "Eyes 14",
+        "category": "eyes",
+        "file": "Eyes-14.png"
+      },
+      {
+        "id": "eyes-eyes-15",
+        "name": "Eyes 15",
+        "category": "eyes",
+        "file": "Eyes-15.png"
+      },
+      {
+        "id": "eyes-eyes-16",
+        "name": "Eyes 16",
+        "category": "eyes",
+        "file": "Eyes-16.png"
+      },
+      {
+        "id": "eyes-eyes-17",
+        "name": "Eyes 17",
+        "category": "eyes",
+        "file": "Eyes-17.png"
+      },
+      {
+        "id": "eyes-eyes-18",
+        "name": "Eyes 18",
+        "category": "eyes",
+        "file": "Eyes-18.png"
+      },
+      {
+        "id": "eyes-eyes-19",
+        "name": "Eyes 19",
+        "category": "eyes",
+        "file": "Eyes-19.png"
+      },
+      {
+        "id": "eyes-eyes-20",
+        "name": "Eyes 20",
+        "category": "eyes",
+        "file": "Eyes-20.png"
+      },
+      {
+        "id": "eyes-eyes-21",
+        "name": "Eyes 21",
+        "category": "eyes",
+        "file": "Eyes-21.png"
+      },
+      {
+        "id": "eyes-eyes-22",
+        "name": "Eyes 22",
+        "category": "eyes",
+        "file": "Eyes-22.png"
+      },
+      {
+        "id": "eyes-eyes-23",
+        "name": "Eyes 23",
+        "category": "eyes",
+        "file": "Eyes-23.png"
+      },
+      {
+        "id": "eyes-eyes-24",
+        "name": "Eyes 24",
+        "category": "eyes",
+        "file": "Eyes-24.png"
+      },
+      {
+        "id": "eyes-eyes-25",
+        "name": "Eyes 25",
+        "category": "eyes",
+        "file": "Eyes-25.png"
+      },
+      {
+        "id": "eyes-eyes-26",
+        "name": "Eyes 26",
+        "category": "eyes",
+        "file": "Eyes-26.png"
+      },
+      {
+        "id": "eyes-eyes-27",
+        "name": "Eyes 27",
+        "category": "eyes",
+        "file": "Eyes-27.png"
+      },
+      {
+        "id": "eyes-eyes-28",
+        "name": "Eyes 28",
+        "category": "eyes",
+        "file": "Eyes-28.png"
+      },
+      {
+        "id": "eyes-eyes-29",
+        "name": "Eyes 29",
+        "category": "eyes",
+        "file": "Eyes-29.png"
+      },
+      {
+        "id": "eyes-eyes-30",
+        "name": "Eyes 30",
+        "category": "eyes",
+        "file": "Eyes-30.png"
+      },
+      {
+        "id": "eyes-eyes-31",
+        "name": "Eyes 31",
+        "category": "eyes",
+        "file": "Eyes-31.png"
+      },
+      {
+        "id": "eyes-eyes-33",
+        "name": "Eyes 33",
+        "category": "eyes",
+        "file": "Eyes-33.png"
+      },
+      {
+        "id": "eyes-eyes-34",
+        "name": "Eyes 34",
+        "category": "eyes",
+        "file": "Eyes-34.png"
+      },
+      {
+        "id": "eyes-eyes-35",
+        "name": "Eyes 35",
+        "category": "eyes",
+        "file": "Eyes-35.png"
+      },
+      {
+        "id": "eyes-eyes-36",
+        "name": "Eyes 36",
+        "category": "eyes",
+        "file": "Eyes-36.png"
+      },
+      {
+        "id": "eyes-eyes-37",
+        "name": "Eyes 37",
+        "category": "eyes",
+        "file": "Eyes-37.png"
+      },
+      {
+        "id": "eyes-layer-123",
+        "name": "Layer 123",
+        "category": "eyes",
+        "file": "Layer 123.png"
+      }
+    ],
+    "mouths": [
+      {
+        "id": "mouths-mouth-1",
+        "name": "Mouth 1",
+        "category": "mouths",
+        "file": "Mouth-1.png"
+      },
+      {
+        "id": "mouths-mouth-2",
+        "name": "Mouth 2",
+        "category": "mouths",
+        "file": "Mouth-2.png"
+      },
+      {
+        "id": "mouths-mouth-3",
+        "name": "Mouth 3",
+        "category": "mouths",
+        "file": "Mouth-3.png"
+      },
+      {
+        "id": "mouths-mouth-4",
+        "name": "Mouth 4",
+        "category": "mouths",
+        "file": "Mouth-4.png"
+      },
+      {
+        "id": "mouths-mouth-5",
+        "name": "Mouth 5",
+        "category": "mouths",
+        "file": "Mouth-5.png"
+      },
+      {
+        "id": "mouths-mouth-6",
+        "name": "Mouth 6",
+        "category": "mouths",
+        "file": "Mouth-6.png"
+      },
+      {
+        "id": "mouths-mouth-7",
+        "name": "Mouth 7",
+        "category": "mouths",
+        "file": "Mouth-7.png"
+      },
+      {
+        "id": "mouths-mouth-8",
+        "name": "Mouth 8",
+        "category": "mouths",
+        "file": "Mouth-8.png"
+      },
+      {
+        "id": "mouths-mouth-9",
+        "name": "Mouth 9",
+        "category": "mouths",
+        "file": "Mouth-9.png"
+      },
+      {
+        "id": "mouths-mouth-10",
+        "name": "Mouth 10",
+        "category": "mouths",
+        "file": "Mouth-10.png"
+      },
+      {
+        "id": "mouths-mouth-11",
+        "name": "Mouth 11",
+        "category": "mouths",
+        "file": "Mouth-11.png"
+      },
+      {
+        "id": "mouths-mouth-12",
+        "name": "Mouth 12",
+        "category": "mouths",
+        "file": "Mouth-12.png"
+      },
+      {
+        "id": "mouths-mouth-13",
+        "name": "Mouth 13",
+        "category": "mouths",
+        "file": "Mouth-13.png"
+      },
+      {
+        "id": "mouths-mouth-14",
+        "name": "Mouth 14",
+        "category": "mouths",
+        "file": "Mouth-14.png"
+      },
+      {
+        "id": "mouths-mouth-15",
+        "name": "Mouth 15",
+        "category": "mouths",
+        "file": "Mouth-15.png"
+      },
+      {
+        "id": "mouths-mouth-16",
+        "name": "Mouth 16",
+        "category": "mouths",
+        "file": "Mouth-16.png"
+      },
+      {
+        "id": "mouths-mouth-17",
+        "name": "Mouth 17",
+        "category": "mouths",
+        "file": "Mouth-17.png"
+      },
+      {
+        "id": "mouths-mouth-18",
+        "name": "Mouth 18",
+        "category": "mouths",
+        "file": "Mouth-18.png"
+      },
+      {
+        "id": "mouths-mouth-19",
+        "name": "Mouth 19",
+        "category": "mouths",
+        "file": "Mouth-19.png"
+      },
+      {
+        "id": "mouths-mouth-20",
+        "name": "Mouth 20",
+        "category": "mouths",
+        "file": "Mouth-20.png"
+      },
+      {
+        "id": "mouths-mouth-21",
+        "name": "Mouth 21",
+        "category": "mouths",
+        "file": "Mouth-21.png"
+      },
+      {
+        "id": "mouths-mouth-22",
+        "name": "Mouth 22",
+        "category": "mouths",
+        "file": "Mouth-22.png"
+      },
+      {
+        "id": "mouths-mouth-23",
+        "name": "Mouth 23",
+        "category": "mouths",
+        "file": "Mouth-23.png"
+      },
+      {
+        "id": "mouths-mouth-24",
+        "name": "Mouth 24",
+        "category": "mouths",
+        "file": "Mouth-24.png"
+      },
+      {
+        "id": "mouths-mouth-25",
+        "name": "Mouth 25",
+        "category": "mouths",
+        "file": "Mouth-25.png"
+      },
+      {
+        "id": "mouths-mouth-26",
+        "name": "Mouth 26",
+        "category": "mouths",
+        "file": "Mouth-26.png"
+      },
+      {
+        "id": "mouths-mouth-27",
+        "name": "Mouth 27",
+        "category": "mouths",
+        "file": "Mouth-27.png"
+      },
+      {
+        "id": "mouths-mouth-28",
+        "name": "Mouth 28",
+        "category": "mouths",
+        "file": "Mouth-28.png"
+      },
+      {
+        "id": "mouths-mouth-29",
+        "name": "Mouth 29",
+        "category": "mouths",
+        "file": "Mouth-29.png"
+      }
+    ],
+    "hatsHair": [
+      {
+        "id": "hatsHair-hats-hair-1",
+        "name": "Hats / Hair 1",
+        "category": "hatsHair",
+        "file": "Hats__Hair-1.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-2",
+        "name": "Hats / Hair 2",
+        "category": "hatsHair",
+        "file": "Hats__Hair-2.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-3",
+        "name": "Hats / Hair 3",
+        "category": "hatsHair",
+        "file": "Hats__Hair-3.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-4",
+        "name": "Hats / Hair 4",
+        "category": "hatsHair",
+        "file": "Hats__Hair-4.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-5",
+        "name": "Hats / Hair 5",
+        "category": "hatsHair",
+        "file": "Hats__Hair-5.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-6",
+        "name": "Hats / Hair 6",
+        "category": "hatsHair",
+        "file": "Hats__Hair-6.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-7",
+        "name": "Hats / Hair 7",
+        "category": "hatsHair",
+        "file": "Hats__Hair-7.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-8",
+        "name": "Hats / Hair 8",
+        "category": "hatsHair",
+        "file": "Hats__Hair-8.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-9",
+        "name": "Hats / Hair 9",
+        "category": "hatsHair",
+        "file": "Hats__Hair-9.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-10",
+        "name": "Hats / Hair 10",
+        "category": "hatsHair",
+        "file": "Hats__Hair-10.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-11",
+        "name": "Hats / Hair 11",
+        "category": "hatsHair",
+        "file": "Hats__Hair-11.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-12",
+        "name": "Hats / Hair 12",
+        "category": "hatsHair",
+        "file": "Hats__Hair-12.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-13",
+        "name": "Hats / Hair 13",
+        "category": "hatsHair",
+        "file": "Hats__Hair-13.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-14",
+        "name": "Hats / Hair 14",
+        "category": "hatsHair",
+        "file": "Hats__Hair-14.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-15",
+        "name": "Hats / Hair 15",
+        "category": "hatsHair",
+        "file": "Hats__Hair-15.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-16",
+        "name": "Hats / Hair 16",
+        "category": "hatsHair",
+        "file": "Hats__Hair-16.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-17",
+        "name": "Hats / Hair 17",
+        "category": "hatsHair",
+        "file": "Hats__Hair-17.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-18",
+        "name": "Hats / Hair 18",
+        "category": "hatsHair",
+        "file": "Hats__Hair-18.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-19",
+        "name": "Hats / Hair 19",
+        "category": "hatsHair",
+        "file": "Hats__Hair-19.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-20",
+        "name": "Hats / Hair 20",
+        "category": "hatsHair",
+        "file": "Hats__Hair-20.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-21",
+        "name": "Hats / Hair 21",
+        "category": "hatsHair",
+        "file": "Hats__Hair-21.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-22",
+        "name": "Hats / Hair 22",
+        "category": "hatsHair",
+        "file": "Hats__Hair-22.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-23",
+        "name": "Hats / Hair 23",
+        "category": "hatsHair",
+        "file": "Hats__Hair-23.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-24",
+        "name": "Hats / Hair 24",
+        "category": "hatsHair",
+        "file": "Hats__Hair-24.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-25",
+        "name": "Hats / Hair 25",
+        "category": "hatsHair",
+        "file": "Hats__Hair-25.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-26",
+        "name": "Hats / Hair 26",
+        "category": "hatsHair",
+        "file": "Hats__Hair-26.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-27",
+        "name": "Hats / Hair 27",
+        "category": "hatsHair",
+        "file": "Hats__Hair-27.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-28",
+        "name": "Hats / Hair 28",
+        "category": "hatsHair",
+        "file": "Hats__Hair-28.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-29",
+        "name": "Hats / Hair 29",
+        "category": "hatsHair",
+        "file": "Hats__Hair-29.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-30",
+        "name": "Hats / Hair 30",
+        "category": "hatsHair",
+        "file": "Hats__Hair-30.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-31",
+        "name": "Hats / Hair 31",
+        "category": "hatsHair",
+        "file": "Hats__Hair-31.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-32",
+        "name": "Hats / Hair 32",
+        "category": "hatsHair",
+        "file": "Hats__Hair-32.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-33",
+        "name": "Hats / Hair 33",
+        "category": "hatsHair",
+        "file": "Hats__Hair-33.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-34",
+        "name": "Hats / Hair 34",
+        "category": "hatsHair",
+        "file": "Hats__Hair-34.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-35",
+        "name": "Hats / Hair 35",
+        "category": "hatsHair",
+        "file": "Hats__Hair-35.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-36",
+        "name": "Hats / Hair 36",
+        "category": "hatsHair",
+        "file": "Hats__Hair-36.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-37",
+        "name": "Hats / Hair 37",
+        "category": "hatsHair",
+        "file": "Hats__Hair-37.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-38",
+        "name": "Hats / Hair 38",
+        "category": "hatsHair",
+        "file": "Hats__Hair-38.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-39",
+        "name": "Hats / Hair 39",
+        "category": "hatsHair",
+        "file": "Hats__Hair-39.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-40",
+        "name": "Hats / Hair 40",
+        "category": "hatsHair",
+        "file": "Hats__Hair-40.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-41",
+        "name": "Hats / Hair 41",
+        "category": "hatsHair",
+        "file": "Hats__Hair-41.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-42",
+        "name": "Hats / Hair 42",
+        "category": "hatsHair",
+        "file": "Hats__Hair-42.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-43",
+        "name": "Hats / Hair 43",
+        "category": "hatsHair",
+        "file": "Hats__Hair-43.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-44",
+        "name": "Hats / Hair 44",
+        "category": "hatsHair",
+        "file": "Hats__Hair-44.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-45",
+        "name": "Hats / Hair 45",
+        "category": "hatsHair",
+        "file": "Hats__Hair-45.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-46",
+        "name": "Hats / Hair 46",
+        "category": "hatsHair",
+        "file": "Hats__Hair-46.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-47",
+        "name": "Hats / Hair 47",
+        "category": "hatsHair",
+        "file": "Hats__Hair-47.png"
+      },
+      {
+        "id": "hatsHair-hats-hair-48",
+        "name": "Hats / Hair 48",
+        "category": "hatsHair",
+        "file": "Hats__Hair-48.png"
+      }
+    ]
+  }
+}
