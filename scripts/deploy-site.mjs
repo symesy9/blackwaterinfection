@@ -8,7 +8,19 @@ const message = process.argv.slice(2).join(" ").trim() || "Deploy site update";
 
 execSync("npm run publish", { stdio: "inherit" });
 
-const filesToStage = ["index.html", "404.html", "assets/", "src/"];
+const filesToStage = [
+  "index.html",
+  "404.html",
+  "assets/",
+  "public/",
+  "dist/",
+  "src/",
+  "docs/",
+  "scripts/",
+  "supabase/",
+  "package.json",
+  "package-lock.json",
+];
 execSync(`git add ${filesToStage.map((f) => `"${f}"`).join(" ")}`, {
   stdio: "inherit",
 });
