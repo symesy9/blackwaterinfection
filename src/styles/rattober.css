@@ -79,30 +79,24 @@ body.bw-rattober-active {
   margin-bottom: 1.25rem;
 }
 
-.rt-page__eyebrow {
-  margin: 0 0 0.35rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  color: var(--wl-muted, rgba(180, 170, 160, 0.62));
+/* Homepage hero typography (Project: / etched title / tagline) */
+.rt-page__header--project-type {
+  margin-bottom: 1.5rem;
 }
 
-.rt-page__title {
-  margin: 0;
-  font-size: clamp(1.75rem, 6vw, 2.4rem);
-  letter-spacing: 0.08em;
-  color: var(--wl-accent, #c9a227);
+.rt-page__header--project-type .bw-home__project-name {
+  margin: 0.12rem 0 0.28rem;
 }
 
-.rt-page__subtitle {
-  margin: 0.35rem 0 0;
-  font-size: clamp(1.1rem, 4vw, 1.45rem);
-  letter-spacing: 0.06em;
+.rt-page__header--project-type .bw-home__tagline {
+  margin-bottom: 0.35rem;
 }
 
 .rt-page__lead {
-  margin: 0.5rem 0 0;
+  margin: 0.35rem 0 0;
   color: var(--wl-muted, rgba(180, 170, 160, 0.62));
   font-size: 0.9rem;
+  letter-spacing: 0.04em;
 }
 
 .rt-creator {

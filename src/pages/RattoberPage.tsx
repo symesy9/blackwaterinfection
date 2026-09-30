@@ -51,10 +51,21 @@ export default function RattoberPage() {
         </div>
 
         <section className="rt-page">
-          <header className="rt-page__header">
-            <p className="rt-page__eyebrow">BLACKWATER LABS // RATTOBER 2026</p>
-            <h1 className="rt-page__title">RATTOBER</h1>
-            <h2 className="rt-page__subtitle">BUILD YOUR RAT</h2>
+          <header className="rt-page__header rt-page__header--project-type">
+            <h1 className="bw-home__project-label">Project:</h1>
+            <p className="bw-home__project-name" aria-label="Rattober">
+              <span className="bw-home__project-name-stack">
+                <span className="bw-home__project-name-etch" aria-hidden="true">
+                  RATT<span>O</span>BER
+                </span>
+                <span className="bw-home__project-name-text">
+                  <span className="bw-home__project-name-light">RATT</span>
+                  <span className="bw-home__name-accent">O</span>
+                  <span className="bw-home__project-name-light">BER</span>
+                </span>
+              </span>
+            </p>
+            <p className="bw-home__tagline">Build your rat</p>
             <p className="rt-page__lead">Build it. Save it. Share it.</p>
           </header>
 
@@ -163,6 +174,34 @@ export default function RattoberPage() {
           onFeedback={creator.setFeedback}
         />
       ) : null}
+
+      <svg className="bw-home__svg-filters" aria-hidden="true" focusable="false">
+        <defs>
+          <filter
+            id="bw-project-grunge"
+            x="-8%"
+            y="-8%"
+            width="116%"
+            height="116%"
+            colorInterpolationFilters="sRGB"
+          >
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.75"
+              numOctaves="3"
+              seed="12"
+              result="noise"
+            />
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="noise"
+              scale="1.2"
+              xChannelSelector="R"
+              yChannelSelector="G"
+            />
+          </filter>
+        </defs>
+      </svg>
     </div>
   );
 }
