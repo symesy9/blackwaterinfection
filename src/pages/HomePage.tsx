@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
 import HomeNav from "../components/home/HomeNav";
+import { BLACKWATER_OPENSEA_MINT_URL } from "../lib/blackwaterLinks";
 import { HOME_ASSETS } from "../lib/homeAssets";
 import { HOME_PROJECT } from "../lib/homeProjectInfo";
 
@@ -145,9 +145,14 @@ export default function HomePage() {
             </div>
 
             <div className="bw-home__actions">
-              <Link to="/infection" className="bw-home__cta">
-                Infect Me
-              </Link>
+              <a
+                href={BLACKWATER_OPENSEA_MINT_URL}
+                className="bw-home__cta"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Mint Here
+              </a>
             </div>
           </aside>
         </section>

@@ -1,6 +1,10 @@
 /** Official Blackwater X (Twitter) profile. */
 export const BLACKWATER_X_URL = "https://x.com/blackwater_z26";
 
+/** OpenSea — Blackwater Rats public mint. */
+export const BLACKWATER_OPENSEA_MINT_URL =
+  "https://opensea.io/collection/blackwater-rats/overview";
+
 /** Little Ollie Labs X profile — nav credit link. */
 export const LITTLE_OLLIE_X_URL = "https://x.com/LittleOllieNFT";
 
