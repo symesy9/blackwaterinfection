@@ -145,10 +145,7 @@ export default function HomePage() {
             </div>
 
             <div className="bw-home__actions">
-              <Link to="/fcfs" className="bw-home__cta">
-                Apply for FCFS →
-              </Link>
-              <Link to="/infection" className="bw-home__cta bw-home__cta--ghost">
+              <Link to="/infection" className="bw-home__cta">
                 Infect Me
               </Link>
             </div>
