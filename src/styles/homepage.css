@@ -839,9 +839,6 @@ body.bw-home-menu-open {
     right: calc(var(--bw-safe-right) + 1.5rem);
   }
 
-  .bw-home__cta--ghost {
-    display: none;
-  }
 }
 
 /* ── Desktop (1024+) ── */

@@ -5,8 +5,8 @@ export const PRIMARY_NAV = [
   { to: "/logs", label: "Logs" },
   { to: "/team", label: "Team" },
   { to: "/faqs", label: "FAQs" },
+  { to: "/rattober", label: "Rattober" },
   { to: "/infection", label: "Infect Me" },
-  { to: "/wallet-checker", label: "Wallet Checker" },
 ] as const;
 
 export const CONTACT_EMAIL = "info@blackwater-labs.com";

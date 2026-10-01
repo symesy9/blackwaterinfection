@@ -32,10 +32,10 @@ import {
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 
 describe("Rattober navigation", () => {
-  it("does not list Rattober in PRIMARY_NAV", () => {
+  it("lists Rattober in PRIMARY_NAV", () => {
     const navJson = JSON.stringify(PRIMARY_NAV);
-    expect(navJson).not.toContain("/rattober");
-    expect(navJson).not.toContain("Rattober");
+    expect(navJson).toContain("/rattober");
+    expect(navJson).toContain("Rattober");
   });
 
   it("keeps /rattober route in App", () => {
