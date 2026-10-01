@@ -71,7 +71,8 @@ export function useRattoberCreator() {
   const [displaySelection, setDisplaySelection] =
     useState<RattoberSelection>(buildEmptySelection);
   const [previewRefreshing, setPreviewRefreshing] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<RattoberCategoryId>("skins");
+  const [activeCategory, setActiveCategory] =
+    useState<RattoberCategoryId>("backgrounds");
   const [subjectId, setSubjectId] = useState(() => randomSubjectId());
   const [exporting, setExporting] = useState(false);
   const [sharing, setSharing] = useState(false);

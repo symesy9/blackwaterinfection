@@ -92,7 +92,7 @@ export const RATTOBER_LAYERS: readonly RattoberLayerConfig[] = [
     folder: "hats-hair",
     label: "HATS / HAIR",
     selectable: true,
-    showInUI: true,
+    showInUI: false,
     autoApplyWhenSingle: false,
   },
 ];
@@ -101,15 +101,14 @@ export const RATTOBER_LAYERS: readonly RattoberLayerConfig[] = [
 export const RATTOBER_RENDER_ORDER: readonly RattoberCategoryId[] =
   RATTOBER_LAYERS.map((l) => l.id);
 
-/** Creator tab order (selectable layers only). */
+/** Creator tab order (selectable layers with showInUI). */
 export const RATTOBER_UI_ORDER: readonly RattoberCategoryId[] = [
+  "backgrounds",
+  "backgroundOverlays",
   "skins",
   "clothing",
   "eyes",
   "mouths",
-  "hatsHair",
-  "backgrounds",
-  "backgroundOverlays",
 ];
 
 export const RATTOBER_SELECTABLE_ORDER: readonly RattoberCategoryId[] =

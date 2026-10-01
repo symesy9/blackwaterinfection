@@ -41,7 +41,9 @@ Preview and 2048×2048 export use the same stack (`RATTOBER_RENDER_ORDER` / `res
 
 ## Creator tabs (user-facing)
 
-Skin → Clothing → Eyes → Mouth → Hats/Hair → **Background** → **Scene**
+**Background** → **Scene** → Skin → Clothing → Eyes → Mouth
+
+(Hats/hair tab hidden until artwork exists; layer still composites when traits are added.)
 
 - **Background** = base background  
 - **Scene** = background overlay (not a replacement for base background)

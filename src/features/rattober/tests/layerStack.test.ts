@@ -24,13 +24,12 @@ describe("Rattober render stack", () => {
 
   it("lists public UI tabs in creator order", () => {
     expect(RATTOBER_UI_ORDER).toEqual([
+      "backgrounds",
+      "backgroundOverlays",
       "skins",
       "clothing",
       "eyes",
       "mouths",
-      "hatsHair",
-      "backgrounds",
-      "backgroundOverlays",
     ]);
   });
 

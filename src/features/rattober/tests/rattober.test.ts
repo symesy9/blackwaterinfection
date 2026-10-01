@@ -54,9 +54,10 @@ describe("Rattober category order", () => {
     expect(RATTOBER_RENDER_ORDER.indexOf("outerRings")).toBe(clothingIdx + 1);
   });
 
-  it("lists skin first and scene last in UI tab order", () => {
-    expect(RATTOBER_UI_ORDER[0]).toBe("skins");
-    expect(RATTOBER_UI_ORDER.at(-1)).toBe("backgroundOverlays");
+  it("lists background first and mouth last in UI tab order", () => {
+    expect(RATTOBER_UI_ORDER[0]).toBe("backgrounds");
+    expect(RATTOBER_UI_ORDER.at(-1)).toBe("mouths");
+    expect(RATTOBER_UI_ORDER).not.toContain("hatsHair");
   });
 
   it("includes every UI category in the render stack", () => {
