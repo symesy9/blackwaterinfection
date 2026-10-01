@@ -12,11 +12,31 @@ export type ResolvedRenderLayer = {
   traitId: string;
 };
 
+function soleStructuralTraitId(category: RattoberCategoryId): string | null {
+  const traits = getTraitsForCategory(category);
+  if (traits.length === 1) return traits[0]!.id;
+  return null;
+}
+
+function resolveStructuralRingTraitId(
+  category: "lowerRings" | "outerRings",
+  selection: RattoberSelection,
+  includeStructural: boolean,
+): string | null {
+  if (!includeStructural) return null;
+  if (!selection.clothing) return null;
+  return soleStructuralTraitId(category);
+}
+
 function resolveTraitIdForLayer(
   category: RattoberCategoryId,
   selection: RattoberSelection,
   includeStructural: boolean,
 ): string | null {
+  if (category === "lowerRings" || category === "outerRings") {
+    return resolveStructuralRingTraitId(category, selection, includeStructural);
+  }
+
   const layer = RATTOBER_LAYER_BY_ID[category];
   const selected = selection[category];
   if (selected) return selected;
@@ -25,9 +45,7 @@ function resolveTraitIdForLayer(
 
   if (!layer.autoApplyWhenSingle) return null;
 
-  const traits = getTraitsForCategory(category);
-  if (traits.length === 1) return traits[0]!.id;
-  return null;
+  return soleStructuralTraitId(category);
 }
 
 /** Canonical back-to-front stack for preview and export. */

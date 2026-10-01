@@ -30,10 +30,10 @@ The manifest scans **only** `public/assets/rattober/` (not `archive/`). WebP der
 1. **Base background** (`backgrounds/`)
 2. **Background overlay / scene** (`background-overlays/`) — transparent circular centre reveals base below
 3. **Skin**
-4. **Clothing**
-5. **Lower ring** (`lower-rings/`) — over skin/clothing
-6. **Outer ring** (`outer-rings/`) — over lower ring
-7. **Eyes**
+4. **Lower ring** (`lower-rings/`) — under clothing
+5. **Eyes** — under clothing (so outfits cover eye art)
+6. **Clothing**
+7. **Outer ring** (`outer-rings/`) — over clothing
 8. **Mouth**
 9. **Hats / hair**
 
@@ -46,7 +46,7 @@ Skin → Clothing → Eyes → Mouth → Hats/Hair → **Background** → **Scen
 - **Background** = base background  
 - **Scene** = background overlay (not a replacement for base background)
 
-**Lower ring** and **outer ring** are structural. If only one PNG exists per folder, they auto-composite when building a rat (not on the idle logo). They are not randomised and are not creator tabs unless we add variants later.
+**Lower ring** and **outer ring** are structural (not creator tabs, not randomised). **Both** are used whenever clothing is selected: lower ring **under** clothing, outer ring **over** clothing. No rings on the idle logo.
 
 ## Archived old collection
 

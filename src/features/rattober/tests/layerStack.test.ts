@@ -8,15 +8,15 @@ import { buildEmptySelection } from "../lib/selectionState";
 import { buildRandomSelection, getTraitsForCategory } from "../lib/traits";
 
 describe("Rattober render stack", () => {
-  it("uses the nine-layer render order", () => {
+  it("uses the nine-layer render order with rings sandwiching clothing", () => {
     expect(RATTOBER_RENDER_ORDER).toEqual([
       "backgrounds",
       "backgroundOverlays",
       "skins",
-      "clothing",
       "lowerRings",
-      "outerRings",
       "eyes",
+      "clothing",
+      "outerRings",
       "mouths",
       "hatsHair",
     ]);
@@ -57,39 +57,45 @@ describe("Rattober render stack", () => {
     const stack = resolveRenderStack(selection, { includeStructural: true });
     const categories = stack.map((l) => l.category);
 
-    const bgIdx = categories.indexOf("backgrounds");
-    const overlayIdx = categories.indexOf("backgroundOverlays");
     const skinIdx = categories.indexOf("skins");
-    const clothingIdx = categories.indexOf("clothing");
     const lowerIdx = categories.indexOf("lowerRings");
-    const outerIdx = categories.indexOf("outerRings");
     const eyesIdx = categories.indexOf("eyes");
-    const mouthIdx = categories.indexOf("mouths");
+    const clothingIdx = categories.indexOf("clothing");
+    const outerIdx = categories.indexOf("outerRings");
 
-    expect(bgIdx).toBeGreaterThanOrEqual(0);
-    expect(overlayIdx).toBeGreaterThan(bgIdx);
-    expect(skinIdx).toBeGreaterThan(overlayIdx);
-    expect(clothingIdx).toBeGreaterThan(skinIdx);
-    if (lowerIdx >= 0) expect(lowerIdx).toBeGreaterThan(clothingIdx);
-    if (outerIdx >= 0) expect(outerIdx).toBeGreaterThan(lowerIdx);
-    expect(eyesIdx).toBeGreaterThan(outerIdx >= 0 ? outerIdx : clothingIdx);
-    expect(mouthIdx).toBeGreaterThan(eyesIdx);
+    expect(skinIdx).toBeGreaterThanOrEqual(0);
+    expect(lowerIdx).toBeGreaterThan(skinIdx);
+    expect(eyesIdx).toBeGreaterThan(lowerIdx);
+    expect(clothingIdx).toBeGreaterThan(eyesIdx);
+    expect(outerIdx).toBeGreaterThan(clothingIdx);
   });
 
-  it("auto-includes single structural ring layers when enabled", () => {
+  it("includes both rings when clothing is selected", () => {
     if (getTraitsForCategory("lowerRings").length !== 1) return;
-    const selection = buildEmptySelection();
-    selection.skins = getTraitsForCategory("skins")[0]?.id ?? null;
-    if (!selection.skins) return;
+    if (getTraitsForCategory("outerRings").length !== 1) return;
 
-    const without = resolveRenderStack(selection, { includeStructural: false });
-    expect(without.some((l) => l.category === "lowerRings")).toBe(false);
+    const ghoul = getTraitsForCategory("clothing").find(
+      (t) => t.file === "Ghoul.png",
+    );
+    const witchOutfit = getTraitsForCategory("clothing").find(
+      (t) => t.file === "Witch outfit.png",
+    );
+    if (!ghoul || !witchOutfit) return;
 
-    const withStructural = resolveRenderStack(selection, {
-      includeStructural: true,
-    });
-    expect(withStructural.some((l) => l.category === "lowerRings")).toBe(true);
-    expect(withStructural.some((l) => l.category === "outerRings")).toBe(true);
+    for (const clothingId of [ghoul.id, witchOutfit.id]) {
+      const selection = buildEmptySelection();
+      selection.skins = getTraitsForCategory("skins")[0]?.id ?? null;
+      selection.clothing = clothingId;
+      const stack = resolveRenderStack(selection, { includeStructural: true });
+      expect(stack.some((l) => l.category === "lowerRings")).toBe(true);
+      expect(stack.some((l) => l.category === "outerRings")).toBe(true);
+    }
+
+    const noClothing = buildEmptySelection();
+    noClothing.skins = getTraitsForCategory("skins")[0]?.id ?? null;
+    const noRing = resolveRenderStack(noClothing, { includeStructural: true });
+    expect(noRing.some((l) => l.category === "lowerRings")).toBe(false);
+    expect(noRing.some((l) => l.category === "outerRings")).toBe(false);
   });
 
   it("does not randomise structural layers", () => {

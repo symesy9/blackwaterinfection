@@ -45,9 +45,13 @@ describe("Rattober navigation", () => {
 });
 
 describe("Rattober category order", () => {
-  it("renders background first and hats last", () => {
+  it("renders background first, eyes under clothing, rings sandwich clothing, hats last", () => {
     expect(RATTOBER_RENDER_ORDER[0]).toBe("backgrounds");
     expect(RATTOBER_RENDER_ORDER.at(-1)).toBe("hatsHair");
+    const clothingIdx = RATTOBER_RENDER_ORDER.indexOf("clothing");
+    expect(RATTOBER_RENDER_ORDER.indexOf("lowerRings")).toBe(clothingIdx - 2);
+    expect(RATTOBER_RENDER_ORDER.indexOf("eyes")).toBe(clothingIdx - 1);
+    expect(RATTOBER_RENDER_ORDER.indexOf("outerRings")).toBe(clothingIdx + 1);
   });
 
   it("lists skin first and scene last in UI tab order", () => {
