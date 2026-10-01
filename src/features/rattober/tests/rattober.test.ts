@@ -68,9 +68,9 @@ describe("Rattober category order", () => {
 });
 
 describe("Rattober share copy", () => {
-  it("keeps caption in one place", () => {
-    expect(RATTOBER_SHARE_CAPTION).toContain("#Rattober");
-    expect(RATTOBER_SHARE_CAPTION).toContain("Blackwater Labs");
+  it("keeps caption body in one place", () => {
+    expect(RATTOBER_SHARE_CAPTION).toContain("escaped");
+    expect(RATTOBER_SHARE_CAPTION).not.toContain("#Rattober");
   });
 
   it("builds download filename with subject id", () => {

@@ -3,7 +3,6 @@ import HomeNav from "../components/home/HomeNav";
 import { HOME_ASSETS } from "../lib/homeAssets";
 import CategoryTabs from "../features/rattober/components/CategoryTabs";
 import RatPreview from "../features/rattober/components/RatPreview";
-import ShareModal from "../features/rattober/components/ShareModal";
 import TraitGrid from "../features/rattober/components/TraitGrid";
 import TraitStepper from "../features/rattober/components/TraitStepper";
 import { totalTraitCount } from "../features/rattober/lib/traits";
@@ -119,13 +118,24 @@ export default function RattoberPage() {
                   </button>
                   <button
                     type="button"
-                    className="rt-btn rt-btn--ghost"
+                    className="rt-btn rt-btn--primary"
                     disabled={creator.sharing}
                     aria-disabled={!creator.selectionComplete}
-                    onClick={() => void creator.shareRat()}
+                    onClick={() => void creator.shareToX()}
                   >
-                    {creator.sharing ? "PROCESSING…" : "SHARE RAT"}
+                    {creator.sharing ? "PROCESSING…" : "SHARE TO X"}
                   </button>
+                  {creator.nativeFileShareAvailable ? (
+                    <button
+                      type="button"
+                      className="rt-btn rt-btn--ghost rt-btn--compact"
+                      disabled={creator.sharing}
+                      aria-disabled={!creator.selectionComplete}
+                      onClick={() => void creator.nativeShareRat()}
+                    >
+                      SHARE
+                    </button>
+                  ) : null}
                 </div>
               </div>
 
@@ -159,15 +169,6 @@ export default function RattoberPage() {
           ) : null}
         </section>
       </main>
-
-      {creator.shareModalOpen ? (
-        <ShareModal
-          blob={creator.shareBlob}
-          subjectId={creator.subjectId}
-          onClose={() => creator.setShareModalOpen(false)}
-          onFeedback={creator.setFeedback}
-        />
-      ) : null}
 
       <svg className="bw-home__svg-filters" aria-hidden="true" focusable="false">
         <defs>

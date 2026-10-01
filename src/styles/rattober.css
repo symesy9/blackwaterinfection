@@ -379,6 +379,12 @@ body.bw-rattober-active {
   color: var(--wl-accent-hover, #e0b830);
 }
 
+.rt-btn--compact {
+  min-height: 2.35rem;
+  font-size: 0.68rem;
+  opacity: 0.92;
+}
+
 .rt-btn--ghost:hover:not(:disabled),
 .rt-tabs__btn:hover,
 .rt-stepper__btn:hover:not(:disabled),

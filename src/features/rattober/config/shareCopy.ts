@@ -1,19 +1,29 @@
-/** Single source for Rattober share caption — update here only. */
-export const RATTOBER_SHARE_CAPTION = `I built my Rattober rat 🐀
+import { BLACKWATER_PUBLIC_SITE_ORIGIN } from "../../../lib/blackwaterLinks";
 
-Build yours at Blackwater Labs.
+/** Default tweet body — URL and #Rattober are appended in rattoberShareTextWithUrl(). */
+export const RATTOBER_SHARE_CAPTION = `My Rattober Rat has escaped 🐀
 
-#Rattober`;
+Build yours and show me what you get 👀`;
+
+/** Subtle status after Share to X (download + compose). */
+export const RATTOBER_SHARE_X_SAVED_MESSAGE =
+  "IMAGE SAVED — ATTACH IT TO YOUR X POST.";
+
+export const RATTOBER_SHARE_X_POPUP_BLOCKED_MESSAGE =
+  "IMAGE SAVED — ALLOW POP-UPS TO OPEN X, THEN ATTACH YOUR PNG.";
 
 export function rattoberShareUrl(): string {
-  if (typeof window !== "undefined") {
-    return `${window.location.origin}${import.meta.env.BASE_URL.replace(/\/$/, "")}/rattober`;
+  const origin = globalThis.window?.location?.origin;
+  if (origin) {
+    const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+    const path = base ? `${base}/rattober` : "/rattober";
+    return `${origin}${path.startsWith("/") ? path : `/${path}`}`;
   }
-  return "https://blackwater-labs.com/rattober";
+  return `${BLACKWATER_PUBLIC_SITE_ORIGIN}/rattober`;
 }
 
 export function rattoberShareTextWithUrl(): string {
-  return `${RATTOBER_SHARE_CAPTION}\n\n${rattoberShareUrl()}`;
+  return `${RATTOBER_SHARE_CAPTION}\n\n${rattoberShareUrl()}\n\n#Rattober`;
 }
 
 export function rattoberDownloadFilename(subjectId?: string): string {

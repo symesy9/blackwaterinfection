@@ -27,8 +27,13 @@ import {
   traitAssetUrl,
 } from "../lib/traits";
 import {
+  RATTOBER_SHARE_X_POPUP_BLOCKED_MESSAGE,
+  RATTOBER_SHARE_X_SAVED_MESSAGE,
+} from "../config/shareCopy";
+import {
+  canNativeShareRatFile,
   downloadRatBlob,
-  shouldUseNativeWebShare,
+  shareRatToX,
   tryNativeShareRat,
 } from "../lib/shareRat";
 
@@ -76,9 +81,8 @@ export function useRattoberCreator() {
   const [subjectId, setSubjectId] = useState(() => randomSubjectId());
   const [exporting, setExporting] = useState(false);
   const [sharing, setSharing] = useState(false);
-  const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [shareBlob, setShareBlob] = useState<Blob | null>(null);
   const [feedback, setFeedback] = useState("");
+  const [nativeFileShareAvailable] = useState(() => canNativeShareRatFile());
   const syncGeneration = useRef(0);
   const displaySelectionRef = useRef(displaySelection);
   displaySelectionRef.current = displaySelection;
@@ -236,7 +240,7 @@ export function useRattoberCreator() {
     }
   }, [exporting, incompleteMessage, selection, selectionComplete, subjectId]);
 
-  const shareRat = useCallback(async () => {
+  const shareToX = useCallback(async () => {
     if (!selectionComplete) {
       setFeedback(incompleteMessage());
       return;
@@ -246,15 +250,38 @@ export function useRattoberCreator() {
     setFeedback("");
     try {
       const blob = await compositeRatToBlob(selection);
-      setShareBlob(blob);
-      if (shouldUseNativeWebShare()) {
-        const result = await tryNativeShareRat(blob, subjectId);
-        if (result === "shared") return;
-        if (result === "cancelled") return;
-      }
-      setShareModalOpen(true);
+      const { composeOpened } = shareRatToX(blob, subjectId);
+      setFeedback(
+        composeOpened
+          ? RATTOBER_SHARE_X_SAVED_MESSAGE
+          : RATTOBER_SHARE_X_POPUP_BLOCKED_MESSAGE,
+      );
     } catch {
       setFeedback("Share failed. Try download instead.");
+    } finally {
+      setSharing(false);
+    }
+  }, [incompleteMessage, selection, selectionComplete, sharing, subjectId]);
+
+  const nativeShareRat = useCallback(async () => {
+    if (!selectionComplete) {
+      setFeedback(incompleteMessage());
+      return;
+    }
+    if (sharing) return;
+    setSharing(true);
+    setFeedback("");
+    try {
+      const blob = await compositeRatToBlob(selection);
+      const result = await tryNativeShareRat(blob, subjectId);
+      if (result === "shared") {
+        setFeedback("");
+        return;
+      }
+      if (result === "cancelled") return;
+      setFeedback("System share unavailable — use Share to X.");
+    } catch {
+      setFeedback("Share failed. Try Share to X or download.");
     } finally {
       setSharing(false);
     }
@@ -274,9 +301,7 @@ export function useRattoberCreator() {
     subjectId,
     exporting,
     sharing,
-    shareModalOpen,
-    setShareModalOpen,
-    shareBlob,
+    nativeFileShareAvailable,
     feedback,
     setFeedback,
     selectTrait,
@@ -284,6 +309,7 @@ export function useRattoberCreator() {
     randomise,
     reset,
     exportRat,
-    shareRat,
+    shareToX,
+    nativeShareRat,
   };
 }

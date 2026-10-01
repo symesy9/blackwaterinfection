@@ -2,46 +2,41 @@ import { downloadBlob } from "../../../lib/mergeInfectionImage";
 import {
   rattoberDownloadFilename,
   rattoberShareTextWithUrl,
+  rattoberShareUrl,
   xComposeIntentUrl,
 } from "../config/shareCopy";
-
-export async function copyRattoberCaption(): Promise<void> {
-  const text = rattoberShareTextWithUrl();
-  if (!navigator.clipboard?.writeText) {
-    throw new Error("Clipboard is not available.");
-  }
-  await navigator.clipboard.writeText(text);
-}
 
 export function downloadRatBlob(blob: Blob, subjectId?: string): void {
   downloadBlob(blob, rattoberDownloadFilename(subjectId));
 }
 
-export function openXComposeWithCaption(): void {
-  window.open(xComposeIntentUrl(rattoberShareTextWithUrl()), "_blank", "noopener,noreferrer");
+/** Opens X compose with full Rattober caption (URL-encoded). Returns false if pop-up blocked. */
+export function openXComposeWithCaption(): boolean {
+  const win = globalThis.window;
+  if (!win?.open) return false;
+  const url = xComposeIntentUrl(rattoberShareTextWithUrl());
+  return win.open(url, "_blank", "noopener,noreferrer") != null;
 }
 
-/** Laptops/desktops get the X modal — macOS share sheet rarely lists X. */
-export function shouldUseNativeWebShare(): boolean {
+export function canNativeShareRatFile(): boolean {
   if (typeof navigator === "undefined" || !navigator.share) return false;
-  if (window.matchMedia("(pointer: fine)").matches) return false;
-  return true;
+  try {
+    const probe = new File([new Blob([""], { type: "image/png" })], "probe.png", {
+      type: "image/png",
+    });
+    return navigator.canShare?.({ files: [probe] }) ?? false;
+  } catch {
+    return false;
+  }
 }
 
-/** Download PNG, copy caption, open X compose (attach image in the X dialog). */
-export async function shareRatToX(
-  blob: Blob,
-  subjectId?: string,
-): Promise<"caption-copied" | "caption-failed"> {
+/** Download PNG, then open X compose — user attaches the saved image in X. */
+export function shareRatToX(blob: Blob, subjectId?: string): {
+  composeOpened: boolean;
+} {
   downloadRatBlob(blob, subjectId);
-  try {
-    await copyRattoberCaption();
-    openXComposeWithCaption();
-    return "caption-copied";
-  } catch {
-    openXComposeWithCaption();
-    return "caption-failed";
-  }
+  const composeOpened = openXComposeWithCaption();
+  return { composeOpened };
 }
 
 export async function tryNativeShareRat(
@@ -59,7 +54,7 @@ export async function tryNativeShareRat(
   const shareData: ShareData = {
     title: "Rattober — Blackwater Labs",
     text: rattoberShareTextWithUrl(),
-    url: typeof window !== "undefined" ? window.location.href : undefined,
+    url: rattoberShareUrl(),
   };
 
   try {
@@ -67,8 +62,7 @@ export async function tryNativeShareRat(
       await navigator.share({ ...shareData, files: [file] });
       return "shared";
     }
-    await navigator.share(shareData);
-    return "shared";
+    return "unsupported";
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
       return "cancelled";

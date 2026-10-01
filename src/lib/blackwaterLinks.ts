@@ -1,3 +1,8 @@
+/** Canonical public site origin (no trailing slash). Override via VITE_PUBLIC_SITE_URL. */
+export const BLACKWATER_PUBLIC_SITE_ORIGIN = (
+  import.meta.env.VITE_PUBLIC_SITE_URL ?? "https://blackwater-labs.com"
+).replace(/\/$/, "");
+
 /** Official Blackwater X (Twitter) profile. */
 export const BLACKWATER_X_URL = "https://x.com/blackwater_z26";
 
