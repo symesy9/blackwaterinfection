@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-01T10:51:50.862Z",
+  "generatedAt": "2026-10-01T13:32:31.464Z",
   "canvasSize": 2048,
   "traits": {
     "backgrounds": [
@@ -92,12 +92,6 @@
         "name": "Net Vest",
         "category": "clothing",
         "file": "Net vest.png"
-      },
-      {
-        "id": "clothing-pumpkin-top-copy",
-        "name": "Pumpkin Top Copy",
-        "category": "clothing",
-        "file": "Pumpkin top copy.png"
       },
       {
         "id": "clothing-pumpkin-top",
