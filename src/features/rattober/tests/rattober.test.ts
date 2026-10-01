@@ -7,6 +7,7 @@ import { HOME_ASSETS } from "../../../lib/homeAssets";
 import { RATTOBER_CANVAS_SIZE } from "../config/categories";
 import {
   RATTOBER_RENDER_ORDER,
+  RATTOBER_SELECTABLE_ORDER,
   RATTOBER_UI_ORDER,
 } from "../config/categories";
 import {
@@ -49,14 +50,15 @@ describe("Rattober category order", () => {
     expect(RATTOBER_RENDER_ORDER.at(-1)).toBe("hatsHair");
   });
 
-  it("lists background first in UI tab order", () => {
-    expect(RATTOBER_UI_ORDER[0]).toBe("backgrounds");
-    expect(RATTOBER_UI_ORDER[1]).toBe("skins");
-    expect(RATTOBER_UI_ORDER.at(-1)).toBe("hatsHair");
+  it("lists skin first and scene last in UI tab order", () => {
+    expect(RATTOBER_UI_ORDER[0]).toBe("skins");
+    expect(RATTOBER_UI_ORDER.at(-1)).toBe("backgroundOverlays");
   });
 
-  it("uses the same six categories in both orders", () => {
-    expect([...RATTOBER_RENDER_ORDER].sort()).toEqual([...RATTOBER_UI_ORDER].sort());
+  it("includes every UI category in the render stack", () => {
+    for (const cat of RATTOBER_UI_ORDER) {
+      expect(RATTOBER_RENDER_ORDER).toContain(cat);
+    }
   });
 });
 
@@ -95,7 +97,7 @@ describe("Rattober selection state", () => {
 
   it("detects progressive build and completion", () => {
     const partial = buildEmptySelection();
-    partial.skins = getTraitsForCategory("skins")[0]?.id ?? null;
+    partial.skins = "skins-example";
     expect(hasAnyTraitSelected(partial)).toBe(true);
     expect(isSelectionComplete(partial)).toBe(false);
 
@@ -104,7 +106,7 @@ describe("Rattober selection state", () => {
     expect(isSelectionComplete(full)).toBe(true);
   });
 
-  it("blocks export until all six categories are chosen", () => {
+  it("blocks export until required selectable categories are chosen", () => {
     const empty = buildEmptySelection();
     expect(exportBlockedMessage(empty)).toMatch(/SELECT BACKGROUND/i);
 
@@ -113,12 +115,19 @@ describe("Rattober selection state", () => {
     expect(exportBlockedMessage(full)).toBeNull();
   });
 
-  it("randomises one trait per category when manifest is ready", () => {
+  it("randomises selectable categories only when manifest is ready", () => {
     if (!isManifestReady()) return;
     vi.spyOn(Math, "random").mockReturnValue(0);
     const random = buildRandomSelection();
-    for (const cat of RATTOBER_RENDER_ORDER) {
-      expect(random[cat]).toBe(getTraitsForCategory(cat)[0]?.id);
+    expect(random.lowerRings).toBeNull();
+    expect(random.outerRings).toBeNull();
+    for (const cat of RATTOBER_SELECTABLE_ORDER) {
+      const list = getTraitsForCategory(cat);
+      if (list.length === 0) {
+        expect(random[cat]).toBeNull();
+      } else {
+        expect(random[cat]).toBe(list[0]?.id);
+      }
     }
     vi.restoreAllMocks();
   });

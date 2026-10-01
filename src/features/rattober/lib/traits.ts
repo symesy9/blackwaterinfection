@@ -1,8 +1,11 @@
 import rawManifest from "../config/traits.generated.json";
 import {
   RATTOBER_FOLDER_BY_CATEGORY,
+  RATTOBER_SELECTABLE_ORDER,
   type RattoberCategoryId,
 } from "../config/categories";
+import type { RattoberSelection } from "./compositeCanvas";
+import { buildEmptySelection } from "./selectionState";
 
 export interface RattoberTrait {
   id: string;
@@ -63,7 +66,7 @@ export function findTraitById(
 }
 
 export function isManifestReady(): boolean {
-  return (Object.keys(manifest.traits) as RattoberCategoryId[]).every(
+  return RATTOBER_SELECTABLE_ORDER.some(
     (cat) => getTraitsForCategory(cat).length > 0,
   );
 }
@@ -75,9 +78,9 @@ export function totalTraitCount(): number {
   );
 }
 
-export function buildRandomSelection(): Record<RattoberCategoryId, string | null> {
-  const selection = {} as Record<RattoberCategoryId, string | null>;
-  for (const cat of Object.keys(manifest.traits) as RattoberCategoryId[]) {
+export function buildRandomSelection(): RattoberSelection {
+  const selection = buildEmptySelection();
+  for (const cat of RATTOBER_SELECTABLE_ORDER) {
     const list = getTraitsForCategory(cat);
     if (list.length === 0) {
       selection[cat] = null;

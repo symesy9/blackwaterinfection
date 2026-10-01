@@ -1,12 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   RATTOBER_CATEGORY_LABELS,
-  RATTOBER_RENDER_ORDER,
   type RattoberCategoryId,
 } from "../config/categories";
 import type { RattoberSelection } from "../lib/compositeCanvas";
 import { compositeRatToBlob } from "../lib/compositeCanvas";
-import { loadTraitImageWithFallback, preloadTraitUrls } from "../lib/imageLoad";
+import {
+  isTraitImageLoaded,
+  loadTraitImageWithFallback,
+  preloadTraitUrls,
+} from "../lib/imageLoad";
+import { resolveRenderStack } from "../lib/layerStack";
 import {
   buildEmptySelection,
   firstMissingCategory,
@@ -24,12 +28,35 @@ import {
 } from "../lib/traits";
 import {
   downloadRatBlob,
+  shouldUseNativeWebShare,
   tryNativeShareRat,
 } from "../lib/shareRat";
 
 function wrapIndex(index: number, length: number): number {
   if (length === 0) return 0;
   return ((index % length) + length) % length;
+}
+
+function layerSourcesForSelection(
+  selection: RattoberSelection,
+  includeStructural: boolean,
+) {
+  return resolveRenderStack(selection, { includeStructural })
+    .map(({ category, traitId }) => {
+      const trait = findTraitById(category, traitId);
+      if (!trait) return null;
+      return {
+        preview: traitAssetUrl(category, trait.file, "preview"),
+        full: traitAssetUrl(category, trait.file, "full"),
+      };
+    })
+    .filter(Boolean) as { preview: string; full: string }[];
+}
+
+function allLayersCached(sources: { preview: string; full: string }[]): boolean {
+  return sources.every(
+    (s) => isTraitImageLoaded(s.preview) || isTraitImageLoaded(s.full),
+  );
 }
 
 export function exportBlockedMessage(selection: RattoberSelection): string | null {
@@ -41,14 +68,19 @@ export function exportBlockedMessage(selection: RattoberSelection): string | nul
 
 export function useRattoberCreator() {
   const [selection, setSelection] = useState<RattoberSelection>(buildEmptySelection);
-  const [activeCategory, setActiveCategory] = useState<RattoberCategoryId>("backgrounds");
+  const [displaySelection, setDisplaySelection] =
+    useState<RattoberSelection>(buildEmptySelection);
+  const [previewRefreshing, setPreviewRefreshing] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<RattoberCategoryId>("skins");
   const [subjectId, setSubjectId] = useState(() => randomSubjectId());
   const [exporting, setExporting] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareBlob, setShareBlob] = useState<Blob | null>(null);
   const [feedback, setFeedback] = useState("");
-  const [previewReady, setPreviewReady] = useState(true);
+  const syncGeneration = useRef(0);
+  const displaySelectionRef = useRef(displaySelection);
+  displaySelectionRef.current = displaySelection;
 
   const ready = isManifestReady();
   const characterStarted = hasAnyTraitSelected(selection);
@@ -66,48 +98,62 @@ export function useRattoberCreator() {
     return idx >= 0 ? idx : null;
   }, [activeCategory, activeTraits, selection]);
 
-  const layerSources = useMemo(() => {
-    return RATTOBER_RENDER_ORDER.map((cat) => {
-      const trait = findTraitById(cat, selection[cat]);
-      if (!trait) return null;
-      return {
-        preview: traitAssetUrl(cat, trait.file, "preview"),
-        full: traitAssetUrl(cat, trait.file, "full"),
-      };
-    }).filter(Boolean) as { preview: string; full: string }[];
-  }, [selection]);
-
   useEffect(() => {
-    if (!ready || !characterStarted) {
-      setPreviewReady(true);
+    if (!ready) return;
+
+    if (!characterStarted) {
+      syncGeneration.current += 1;
+      setDisplaySelection(buildEmptySelection());
+      setPreviewRefreshing(false);
       return;
     }
-    if (layerSources.length === 0) {
-      setPreviewReady(true);
-      return;
-    }
-    let cancelled = false;
-    setPreviewReady(false);
-    Promise.all(
-      layerSources.map(({ preview, full }) =>
-        loadTraitImageWithFallback(preview, full),
-      ),
-    )
-      .then(() => {
-        if (!cancelled) setPreviewReady(true);
-      })
-      .catch(() => {
-        if (!cancelled) setPreviewReady(false);
-      });
-    return () => {
-      cancelled = true;
+
+    const sources = layerSourcesForSelection(selection, true);
+    if (sources.length === 0) return;
+
+    const generation = ++syncGeneration.current;
+    const hadDisplay = hasAnyTraitSelected(displaySelectionRef.current);
+
+    const commitDisplay = () => {
+      if (generation !== syncGeneration.current) return;
+      setDisplaySelection(selection);
+      setPreviewRefreshing(false);
     };
-  }, [layerSources, ready, characterStarted]);
+
+    if (allLayersCached(sources)) {
+      commitDisplay();
+      return;
+    }
+
+    if (hadDisplay) {
+      setPreviewRefreshing(true);
+    } else {
+      setDisplaySelection(selection);
+    }
+
+    void Promise.all(
+      sources.map(({ preview, full }) => loadTraitImageWithFallback(preview, full)),
+    )
+      .then(commitDisplay)
+      .catch(() => {
+        if (generation === syncGeneration.current) {
+          setDisplaySelection(selection);
+          setPreviewRefreshing(false);
+        }
+      });
+  }, [selection, ready, characterStarted]);
 
   useEffect(() => {
     if (activeTraits.length === 0) return;
-    const currentIdx =
-      selectedIndex ?? (activeTraits.length > 0 ? 0 : 0);
+    const urls = activeTraits.map((t) =>
+      traitAssetUrl(activeCategory, t.file, "preview"),
+    );
+    preloadTraitUrls(urls);
+  }, [activeCategory, activeTraits]);
+
+  useEffect(() => {
+    if (activeTraits.length === 0) return;
+    const currentIdx = selectedIndex ?? 0;
     const prev = activeTraits[wrapIndex(currentIdx - 1, activeTraits.length)];
     const next = activeTraits[wrapIndex(currentIdx + 1, activeTraits.length)];
     const current = activeTraits[currentIdx];
@@ -124,6 +170,13 @@ export function useRattoberCreator() {
   );
 
   const selectTrait = useCallback((category: RattoberCategoryId, traitId: string) => {
+    const trait = findTraitById(category, traitId);
+    if (trait) {
+      void loadTraitImageWithFallback(
+        traitAssetUrl(category, trait.file, "preview"),
+        traitAssetUrl(category, trait.file, "full"),
+      );
+    }
     setSelection((prev) => ({ ...prev, [category]: traitId }));
   }, []);
 
@@ -137,12 +190,27 @@ export function useRattoberCreator() {
   );
 
   const randomise = useCallback(() => {
-    setSelection(buildRandomSelection());
+    const next = buildRandomSelection();
+    for (const { category, traitId } of resolveRenderStack(next, {
+      includeStructural: true,
+    })) {
+      const trait = findTraitById(category, traitId);
+      if (trait) {
+        void loadTraitImageWithFallback(
+          traitAssetUrl(category, trait.file, "preview"),
+          traitAssetUrl(category, trait.file, "full"),
+        );
+      }
+    }
+    setSelection(next);
     setSubjectId(randomSubjectId());
   }, []);
 
   const reset = useCallback(() => {
+    syncGeneration.current += 1;
     setSelection(buildEmptySelection());
+    setDisplaySelection(buildEmptySelection());
+    setPreviewRefreshing(false);
     setSubjectId(randomSubjectId());
     setFeedback("");
   }, []);
@@ -178,9 +246,11 @@ export function useRattoberCreator() {
     try {
       const blob = await compositeRatToBlob(selection);
       setShareBlob(blob);
-      const result = await tryNativeShareRat(blob, subjectId);
-      if (result === "shared") return;
-      if (result === "cancelled") return;
+      if (shouldUseNativeWebShare()) {
+        const result = await tryNativeShareRat(blob, subjectId);
+        if (result === "shared") return;
+        if (result === "cancelled") return;
+      }
       setShareModalOpen(true);
     } catch {
       setFeedback("Share failed. Try download instead.");
@@ -192,6 +262,8 @@ export function useRattoberCreator() {
   return {
     ready,
     selection,
+    displaySelection,
+    previewRefreshing,
     characterStarted,
     selectionComplete,
     activeCategory,
@@ -199,7 +271,6 @@ export function useRattoberCreator() {
     activeTraits,
     selectedIndex,
     subjectId,
-    previewReady,
     exporting,
     sharing,
     shareModalOpen,

@@ -1,76 +1,70 @@
 # Rattober artwork — developer guide
 
-## Where to put Simsy's final artwork
+## Active artwork (creator + website)
 
-Place **2048×2048 PNG** trait files here:
+Place **2048×2048 PNG** trait files only under:
 
 ```
 public/assets/rattober/
-  backgrounds/
+  backgrounds/              ← base colour / full-canvas backgrounds
+  background-overlays/      ← scenic frames (DarkPath, Grave, etc.)
   skins/
   clothing/
+  lower-rings/              ← structural ring layers (often auto-applied)
+  outer-rings/
   eyes/
   mouths/
   hats-hair/
 ```
 
-Then regenerate the manifest (also builds WebP thumbnails for fast UI):
+Then:
 
 ```bash
 npm run rattober:manifest
 ```
 
-This writes `public/assets/rattober/_derived/thumbs/` (512px grid) and
-`_derived/preview/` (1024px live preview). **Export/download still uses full 2048 PNGs.**
+The manifest scans **only** `public/assets/rattober/` (not `archive/`). WebP derivatives are written under `_derived/` for fast UI; **export uses full PNGs**.
 
-Commit the updated `src/features/rattober/config/traits.generated.json` (and the PNGs under `public/assets/rattober/`).
+## Render order (back → front)
 
-## File rules (required for alignment)
+1. **Base background** (`backgrounds/`)
+2. **Background overlay / scene** (`background-overlays/`) — transparent circular centre reveals base below
+3. **Skin**
+4. **Clothing**
+5. **Lower ring** (`lower-rings/`) — over skin/clothing
+6. **Outer ring** (`outer-rings/`) — over lower ring
+7. **Eyes**
+8. **Mouth**
+9. **Hats / hair**
 
-- Format: **PNG**
-- Size: **2048 × 2048**
-- Transparency: preserve alpha where needed
-- **Do not crop** traits to visible bounds — keep the full master canvas
-- Do not resize or reposition layers in code — alignment is baked into the PNGs
+Preview and 2048×2048 export use the same stack (`RATTOBER_RENDER_ORDER` / `resolveRenderStack()`).
 
-## Layer order (compositing)
+## Creator tabs (user-facing)
 
-Back → front:
+Skin → Clothing → Eyes → Mouth → Hats/Hair → **Background** → **Scene**
 
-1. Background  
-2. Skin  
-3. Clothing  
-4. Eyes  
-5. Mouth  
-6. Hats / Hair  
+- **Background** = base background  
+- **Scene** = background overlay (not a replacement for base background)
 
-Preview and export use the same order (`RATTOBER_RENDER_ORDER` in `src/features/rattober/config/categories.ts`).
+**Lower ring** and **outer ring** are structural. If only one PNG exists per folder, they auto-composite when building a rat (not on the idle logo). They are not randomised and are not creator tabs unless we add variants later.
 
-## UI category order
+## Archived old collection
 
-Background → Skin → Clothing → Mouth → Eyes → Hats/Hair (`RATTOBER_UI_ORDER`).
+```
+archive/rattober-original-collection/
+```
 
-## How traits are registered
+Not served and not scanned by the manifest.
 
-1. Drop PNGs into the folder for that category  
-2. Run `npm run rattober:manifest`  
-3. The script writes `traits.generated.json` with `id`, `name`, `category`, `file`  
-4. Public URLs resolve to `/assets/rattober/<folder>/<file>`
+## File rules
 
-To **remove** traits: delete PNGs and re-run the manifest script.
+- PNG, **2048 × 2048**, full shared canvas, preserve transparency  
+- Do not crop traits to visible bounds in code  
 
-To **rename** labels shown in the UI: filenames are humanised automatically; adjust the filename or extend the generator later.
+## Trait names
 
-## Default rat
-
-On load, the creator picks the **first trait in each category** (sorted filename). To change defaults, reorder filenames or set explicit defaults in code later.
+Filenames are humanised in the manifest (e.g. `Professor-Hair.png` → **Professor Hair**).
 
 ## Share caption
 
-Edit only:
-
 `src/features/rattober/config/shareCopy.ts`
-
-## Future compatibility fields
-
-Trait entries can later gain `enabled`, `weight`, `incompatibleWith`, `requires` without changing the folder layout.

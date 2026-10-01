@@ -25,5 +25,5 @@ export function rattoberDownloadFilename(subjectId?: string): string {
 }
 
 export function xComposeIntentUrl(text: string): string {
-  return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+  return `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
 }

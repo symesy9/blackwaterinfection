@@ -86,10 +86,10 @@ export default function RattoberPage() {
             <div className="rt-creator">
               <div className="rt-creator__preview-col">
                 <RatPreview
-                  selection={creator.selection}
+                  selection={creator.displaySelection}
                   subjectId={creator.subjectId}
                   idle={!creator.characterStarted}
-                  loading={creator.characterStarted && !creator.previewReady}
+                  refreshing={creator.previewRefreshing}
                 />
                 <div className="rt-actions rt-actions--row">
                   <button
@@ -111,10 +111,7 @@ export default function RattoberPage() {
                   <button
                     type="button"
                     className="rt-btn rt-btn--primary"
-                    disabled={
-                      creator.exporting ||
-                      (creator.characterStarted && !creator.previewReady)
-                    }
+                    disabled={creator.exporting}
                     aria-disabled={!creator.selectionComplete}
                     onClick={() => void creator.exportRat()}
                   >
@@ -123,10 +120,7 @@ export default function RattoberPage() {
                   <button
                     type="button"
                     className="rt-btn rt-btn--ghost"
-                    disabled={
-                      creator.sharing ||
-                      (creator.characterStarted && !creator.previewReady)
-                    }
+                    disabled={creator.sharing}
                     aria-disabled={!creator.selectionComplete}
                     onClick={() => void creator.shareRat()}
                   >

@@ -1,5 +1,6 @@
-import { RATTOBER_CANVAS_SIZE, RATTOBER_RENDER_ORDER } from "../config/categories";
+import { RATTOBER_CANVAS_SIZE } from "../config/categories";
 import type { RattoberCategoryId } from "../config/categories";
+import { resolveRenderStack } from "./layerStack";
 import { findTraitById, traitAssetUrl } from "./traits";
 import { loadTraitImage } from "./imageLoad";
 
@@ -16,8 +17,9 @@ export async function compositeRatToBlob(
     throw new Error("Canvas is not supported in this browser.");
   }
 
-  for (const category of RATTOBER_RENDER_ORDER) {
-    const traitId = selection[category];
+  const stack = resolveRenderStack(selection, { includeStructural: true });
+
+  for (const { category, traitId } of stack) {
     const trait = findTraitById(category, traitId);
     if (!trait) continue;
     const url = traitAssetUrl(category, trait.file, "full");

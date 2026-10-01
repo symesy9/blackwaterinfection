@@ -1,11 +1,19 @@
-import { RATTOBER_RENDER_ORDER, type RattoberCategoryId } from "../config/categories";
+import type { RattoberCategoryId } from "../config/categories";
 import type { RattoberSelection } from "./compositeCanvas";
+import {
+  firstMissingSelectableCategory,
+  hasAnySelectableTraitSelected,
+  isSelectableSelectionComplete,
+} from "./layerStack";
 
 export function buildEmptySelection(): RattoberSelection {
   return {
     backgrounds: null,
+    backgroundOverlays: null,
     skins: null,
     clothing: null,
+    lowerRings: null,
+    outerRings: null,
     eyes: null,
     mouths: null,
     hatsHair: null,
@@ -13,20 +21,17 @@ export function buildEmptySelection(): RattoberSelection {
 }
 
 export function hasAnyTraitSelected(selection: RattoberSelection): boolean {
-  return RATTOBER_RENDER_ORDER.some((cat) => selection[cat] != null);
+  return hasAnySelectableTraitSelected(selection);
 }
 
 export function isSelectionComplete(selection: RattoberSelection): boolean {
-  return RATTOBER_RENDER_ORDER.every((cat) => selection[cat] != null);
+  return isSelectableSelectionComplete(selection);
 }
 
 export function firstMissingCategory(
   selection: RattoberSelection,
 ): RattoberCategoryId | null {
-  for (const cat of RATTOBER_RENDER_ORDER) {
-    if (!selection[cat]) return cat;
-  }
-  return null;
+  return firstMissingSelectableCategory(selection);
 }
 
 function wrapIndex(index: number, length: number): number {

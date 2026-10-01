@@ -1,5 +1,5 @@
 /**
- * Scans public/assets/rattober/* and writes trait manifest for the creator.
+ * Scans public/assets/rattober/* only (not archive/) and writes trait manifest.
  * Run: npm run rattober:manifest
  */
 import { readdirSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
@@ -12,8 +12,11 @@ const outFile = join(root, "src", "features", "rattober", "config", "traits.gene
 
 const FOLDERS = {
   backgrounds: "backgrounds",
+  backgroundOverlays: "background-overlays",
   skins: "skins",
   clothing: "clothing",
+  lowerRings: "lower-rings",
+  outerRings: "outer-rings",
   eyes: "eyes",
   mouths: "mouths",
   hatsHair: "hats-hair",

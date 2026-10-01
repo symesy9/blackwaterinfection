@@ -1,34 +1,39 @@
 import { HOME_ASSETS } from "../../../lib/homeAssets";
-import { RATTOBER_RENDER_ORDER } from "../config/categories";
 import type { RattoberSelection } from "../lib/compositeCanvas";
+import { resolveRenderStack } from "../lib/layerStack";
 import { findTraitById, traitAssetUrl } from "../lib/traits";
 
 type RatPreviewProps = {
   selection: RattoberSelection;
   subjectId: string;
   idle: boolean;
-  loading: boolean;
+  refreshing: boolean;
 };
 
 export default function RatPreview({
   selection,
   subjectId,
   idle,
-  loading,
+  refreshing,
 }: RatPreviewProps) {
   const statusLabel = idle
     ? "STATUS // AWAITING CONFIGURATION"
-    : loading
-      ? "STATUS // LOADING SUBJECT…"
+    : refreshing
+      ? "STATUS // UPDATING SUBJECT…"
       : "STATUS // CONFIGURABLE";
 
-  const showLayers = !idle && !loading;
+  const stack = idle
+    ? []
+    : resolveRenderStack(selection, { includeStructural: true });
 
   return (
     <div className="rt-preview">
       <div className="rt-preview__frame">
         <p className="rt-preview__label">SUBJECT // {subjectId}</p>
-        <div className="rt-preview__viewport" aria-live="polite">
+        <div
+          className={`rt-preview__viewport${refreshing ? " is-refreshing" : ""}`}
+          aria-live="polite"
+        >
           {idle ? (
             <img
               className="rt-preview__layer rt-preview__logo"
@@ -36,14 +41,10 @@ export default function RatPreview({
               alt="Blackwater Labs"
               decoding="async"
             />
-          ) : null}
-          {!idle && loading ? (
-            <p className="rt-preview__loading">LOADING SUBJECT…</p>
-          ) : null}
-          {showLayers ? (
+          ) : (
             <div className="rt-preview__stack">
-              {RATTOBER_RENDER_ORDER.map((category, index) => {
-                const trait = findTraitById(category, selection[category]);
+              {stack.map(({ category, traitId }, index) => {
+                const trait = findTraitById(category, traitId);
                 if (!trait) return null;
                 const src = traitAssetUrl(category, trait.file, "preview");
                 const full = traitAssetUrl(category, trait.file, "full");
@@ -56,6 +57,7 @@ export default function RatPreview({
                     alt=""
                     decoding="async"
                     fetchPriority={index === 0 ? "high" : "auto"}
+                    data-rt-layer={import.meta.env.DEV ? category : undefined}
                     onError={(event) => {
                       const img = event.currentTarget;
                       if (img.src !== full) img.src = full;
@@ -64,7 +66,7 @@ export default function RatPreview({
                 );
               })}
             </div>
-          ) : null}
+          )}
         </div>
         <p className="rt-preview__status">{statusLabel}</p>
       </div>

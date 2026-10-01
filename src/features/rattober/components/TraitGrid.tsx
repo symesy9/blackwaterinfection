@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { RattoberCategoryId } from "../config/categories";
+import { preloadTraitUrls } from "../lib/imageLoad";
 import type { RattoberTrait } from "../lib/traits";
 import { traitAssetUrl } from "../lib/traits";
 
@@ -58,6 +59,12 @@ export default function TraitGrid({
               aria-label={`${trait.name}${selected ? " (selected)" : ""}`}
               aria-pressed={selected}
               onClick={() => onSelect(trait.id)}
+              onMouseEnter={() =>
+                preloadTraitUrls([
+                  traitAssetUrl(category, trait.file, "preview"),
+                  traitAssetUrl(category, trait.file, "full"),
+                ])
+              }
             >
               <span className="rt-grid__thumb">
                 <TraitThumb category={category} file={trait.file} />

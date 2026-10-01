@@ -1,8 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   copyRattoberCaption,
   downloadRatBlob,
   openXComposeWithCaption,
+  shareRatToX,
+  shouldUseNativeWebShare,
+  tryNativeShareRat,
 } from "../lib/shareRat";
 
 type ShareModalProps = {
@@ -18,6 +21,9 @@ export default function ShareModal({
   onClose,
   onFeedback,
 }: ShareModalProps) {
+  const [busy, setBusy] = useState(false);
+  const nativeShare = shouldUseNativeWebShare();
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -25,6 +31,35 @@ export default function ShareModal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  const handleShareToX = async () => {
+    if (!blob || busy) return;
+    setBusy(true);
+    try {
+      const caption = await shareRatToX(blob, subjectId);
+      onFeedback(
+        caption === "caption-copied"
+          ? "Caption copied. Attach the downloaded PNG in X."
+          : "X opened — paste caption and attach the downloaded PNG.",
+      );
+      onClose();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleNativeShare = async () => {
+    if (!blob || busy) return;
+    setBusy(true);
+    try {
+      const result = await tryNativeShareRat(blob, subjectId);
+      if (result === "shared") onClose();
+      if (result === "cancelled") return;
+      onFeedback("System share unavailable — use Share to X instead.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <div className="rt-modal-backdrop" role="presentation" onClick={onClose}>
@@ -36,19 +71,39 @@ export default function ShareModal({
         onClick={(event) => event.stopPropagation()}
       >
         <h2 id="rt-share-title" className="rt-modal__title">
-          YOUR RAT IS READY
+          SHARE YOUR RAT
         </h2>
         <p className="rt-modal__lead">
-          Save the image, copy the caption, then open X and attach the PNG manually.
+          Share to X downloads your rat, copies the caption, and opens the post
+          composer — attach the PNG in X before posting.
         </p>
         <div className="rt-modal__actions">
           <button
             type="button"
             className="rt-btn rt-btn--primary"
+            disabled={!blob || busy}
+            onClick={() => void handleShareToX()}
+          >
+            {busy ? "PROCESSING…" : "SHARE TO X"}
+          </button>
+          {nativeShare ? (
+            <button
+              type="button"
+              className="rt-btn rt-btn--ghost"
+              disabled={!blob || busy}
+              onClick={() => void handleNativeShare()}
+            >
+              MORE OPTIONS…
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="rt-btn rt-btn--ghost"
             disabled={!blob}
             onClick={() => {
               if (!blob) return;
               downloadRatBlob(blob, subjectId);
+              onFeedback("Image downloaded.");
             }}
           >
             DOWNLOAD IMAGE
@@ -69,7 +124,7 @@ export default function ShareModal({
             className="rt-btn rt-btn--ghost"
             onClick={() => openXComposeWithCaption()}
           >
-            OPEN X
+            OPEN X (CAPTION ONLY)
           </button>
           <button type="button" className="rt-btn rt-btn--ghost" onClick={onClose}>
             CLOSE

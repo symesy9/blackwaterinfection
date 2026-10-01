@@ -11,16 +11,19 @@ const traitsRoot = join(root, "public", "assets", "rattober");
 
 const FOLDERS = {
   backgrounds: "backgrounds",
+  backgroundOverlays: "background-overlays",
   skins: "skins",
   clothing: "clothing",
+  lowerRings: "lower-rings",
+  outerRings: "outer-rings",
   eyes: "eyes",
   mouths: "mouths",
   hatsHair: "hats-hair",
 };
 
 const VARIANTS = [
-  { key: "thumbs", size: 512, quality: 82 },
-  { key: "preview", size: 1024, quality: 86 },
+  { key: "thumbs", size: 384, quality: 80 },
+  { key: "preview", size: 768, quality: 84 },
 ];
 
 let sharp;
